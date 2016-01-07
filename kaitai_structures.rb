@@ -43,11 +43,11 @@ module KaitaiStructures
   end
 
   def read_s2le
-    @_io.read(2).unpack('v')[0]
+    to_signed(@_io.read(2).unpack('v')[0], SIGN_MASK_16)
   end
 
   def read_s4le
-    @_io.read(4).unpack('V')[0]
+    to_signed(@_io.read(4).unpack('V')[0], SIGN_MASK_32)
   end
 
   def read_s8le
@@ -66,5 +66,14 @@ module KaitaiStructures
 
   def read_str_byte_limit(byte_size, encoding)
     @_io.read(byte_size).force_encoding(encoding)
+  end
+
+  private
+  SIGN_MASK_16 = (1 << (16 - 1))
+  SIGN_MASK_32 = (1 << (32 - 1))
+  SIGN_MASK_64 = (1 << (64 - 1))
+
+  def to_signed(x, mask)
+    (x & ~mask) - (x & mask)
   end
 end
