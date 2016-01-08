@@ -82,11 +82,11 @@ module KaitaiStructures
   end
 
   def read_s2be
-    @_io.read(2).unpack('n')[0]
+    to_signed(read_u2be, SIGN_MASK_16)
   end
 
   def read_s4be
-    @_io.read(4).unpack('N')[0]
+    to_signed(read_u4be, SIGN_MASK_32)
   end
 
   if @@big_endian
