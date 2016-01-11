@@ -105,6 +105,15 @@ module KaitaiStructures
     @_io.read(byte_size).force_encoding(encoding)
   end
 
+  def read_strz(encoding)
+    r = ''
+    loop {
+      c = @_io.getc
+      return r if c == "\0"
+      r << c
+    }
+  end
+
   private
   SIGN_MASK_16 = (1 << (16 - 1))
   SIGN_MASK_32 = (1 << (32 - 1))
