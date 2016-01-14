@@ -3,10 +3,12 @@ module KaitaiStructures
   @@big_endian = [0x0102].pack('s') == [0x0102].pack('n')
 
   def ensure_fixed_contents(size, expected)
-    actual = @_io.read(size).bytes
+    buf = @_io.read(size)
+    actual = buf.bytes
     if actual != expected
       raise "Unexpected fixed contents: got #{actual.inspect}, was waiting for #{expected.inspect}"
     end
+    buf
   end
 
   # ========================================================================
@@ -105,11 +107,15 @@ module KaitaiStructures
     @_io.read(byte_size).force_encoding(encoding)
   end
 
-  def read_strz(encoding)
+  def read_strz(encoding, term, include_term, consume_term)
     r = ''
     loop {
       c = @_io.getc
-      return r if c == "\0"
+      if c.ord == term
+        r << c if include_term
+        @_io.seek(@_io.pos - 1) unless consume_term
+        return r
+      end
       r << c
     }
   end
