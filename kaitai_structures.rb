@@ -110,11 +110,12 @@ module KaitaiStructures
   def read_strz(encoding, term, include_term, consume_term)
     r = ''
     loop {
+      raise "End of stream reached, but no terminator #{term} found" if @_io.eof?
       c = @_io.getc
       if c.ord == term
         r << c if include_term
         @_io.seek(@_io.pos - 1) unless consume_term
-        return r
+        return r.force_encoding(encoding)
       end
       r << c
     }
