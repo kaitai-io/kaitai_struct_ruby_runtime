@@ -1,5 +1,40 @@
-module KaitaiStruct
+require 'stringio'
+
+class KaitaiStruct
+  def initialize(_io, _parent = nil, _root = self)
+    @_io = _io
+    @_parent = _parent
+    @_root = _root
+  end
+
+  def self.from_file(filename)
+    self.new(KaitaiStream.open(filename))
+  end
+
   attr_reader :_io
+end
+
+class KaitaiStream
+  def initialize(arg)
+    if arg.is_a?(String)
+      @_io = StringIO.new(arg)
+    elsif arg.is_a?(IO)
+      @_io = arg
+    else
+      raise TypeError.new('can be initialized with IO or String only')
+    end
+  end
+
+  def self.open(filename)
+    self.new(File.open(filename, 'rb:ASCII-8BIT'))
+  end
+
+  # ========================================================================
+  # Forwarding of IO API calls
+  # ========================================================================
+
+  def eof?; @_io.eof?; end
+  def seek(x); @_io.seek(x); end
 
   # Test endianness of the platform
   @@big_endian = [0x0102].pack('s') == [0x0102].pack('n')
@@ -101,6 +136,16 @@ module KaitaiStruct
     def read_s8be
       to_signed(read_u8be, SIGN_MASK_64)
     end
+  end
+
+  # ========================================================================
+
+  def read_bytes_full
+    @_io.read
+  end
+
+  def read_bytes(n)
+    @_io.read(n)
   end
 
   # ========================================================================
