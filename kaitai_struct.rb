@@ -1,4 +1,6 @@
 module KaitaiStruct
+  attr_reader :_io
+
   # Test endianness of the platform
   @@big_endian = [0x0102].pack('s') == [0x0102].pack('n')
 
