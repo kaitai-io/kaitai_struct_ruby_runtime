@@ -53,43 +53,43 @@ class KaitaiStream
   # ========================================================================
 
   def read_u1
-    @_io.read(1).unpack('C')[0]
+    read_bytes(1).unpack('C')[0]
   end
 
   def read_u2le
-    @_io.read(2).unpack('v')[0]
+    read_bytes(2).unpack('v')[0]
   end
 
   def read_u4le
-    @_io.read(4).unpack('V')[0]
+    read_bytes(4).unpack('V')[0]
   end
 
   unless @@big_endian
     def read_u8le
-      @_io.read(8).unpack('Q')[0]
+      read_bytes(8).unpack('Q')[0]
     end
   else
     def read_u8le
-      a, b = @_io.read(8).unpack('VV')
+      a, b = read_bytes(8).unpack('VV')
       (b << 32) + a
     end
   end
 
   def read_u2be
-    @_io.read(2).unpack('n')[0]
+    read_bytes(2).unpack('n')[0]
   end
 
   def read_u4be
-    @_io.read(4).unpack('N')[0]
+    read_bytes(4).unpack('N')[0]
   end
 
   if @@big_endian
     def read_u8be
-      @_io.read(8).unpack('Q')[0]
+      read_bytes(8).unpack('Q')[0]
     end
   else
     def read_u8be
-      a, b = @_io.read(8).unpack('NN')
+      a, b = read_bytes(8).unpack('NN')
       (a << 32) + b
     end
   end
@@ -99,7 +99,7 @@ class KaitaiStream
   # ========================================================================
 
   def read_s1
-    @_io.read(1).unpack('c')[0]
+    read_bytes(1).unpack('c')[0]
   end
 
   def read_s2le
@@ -112,7 +112,7 @@ class KaitaiStream
 
   unless @@big_endian
     def read_s8le
-      @_io.read(8).unpack('q')[0]
+      read_bytes(8).unpack('q')[0]
     end
   else
     def read_s8le
@@ -130,7 +130,7 @@ class KaitaiStream
 
   if @@big_endian
     def read_s8be
-      @_io.read(8).unpack('q')[0]
+      read_bytes(8).unpack('q')[0]
     end
   else
     def read_s8be
@@ -145,13 +145,20 @@ class KaitaiStream
   end
 
   def read_bytes(n)
-    @_io.read(n)
+    r = @_io.read(n)
+    if r
+      rl = r.bytesize
+    else
+      rl = 0
+    end
+    raise EOFError.new("attempted to read #{n} bytes, got only #{rl}") if rl < n
+    r
   end
 
   # ========================================================================
 
   def read_str_byte_limit(byte_size, encoding)
-    @_io.read(byte_size).force_encoding(encoding)
+    read_bytes(byte_size).force_encoding(encoding)
   end
 
   def read_strz(encoding, term, include_term, consume_term, eos_error)
