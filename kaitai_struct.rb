@@ -15,6 +15,14 @@ class KaitaiStruct
 end
 
 class KaitaiStream
+  class UnexpectedDataError < Exception
+    def initialize(actual, expected)
+      super("Unexpected fixed contents: got #{KaitaiStream.format_hex(actual)}, was waiting for #{KaitaiStream.format_hex(expected)}")
+      @actual = actual
+      @expected = expected
+    end
+  end
+
   def initialize(arg)
     if arg.is_a?(String)
       @_io = StringIO.new(arg)
@@ -44,7 +52,7 @@ class KaitaiStream
     buf = @_io.read(size)
     actual = buf.bytes
     if actual != expected
-      raise "Unexpected fixed contents: got #{actual.inspect}, was waiting for #{expected.inspect}"
+      raise UnexpectedDataError.new(actual, expected)
     end
     buf
   end
@@ -167,7 +175,7 @@ class KaitaiStream
     loop {
       if @_io.eof?
         if eos_error
-          raise "End of stream reached, but no terminator #{term} found"
+          raise EOFError.new("end of stream reached, but no terminator #{term} found")
         else
           return r.force_encoding(encoding)
         end
@@ -189,5 +197,9 @@ class KaitaiStream
 
   def to_signed(x, mask)
     (x & ~mask) - (x & mask)
+  end
+
+  def self.format_hex(arr)
+    arr.map { |x| sprintf('%02X', x) }.join(' ')
   end
 end
