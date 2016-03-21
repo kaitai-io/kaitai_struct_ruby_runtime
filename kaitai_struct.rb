@@ -35,6 +35,7 @@ class KaitaiStream
 
   def eof?; @_io.eof?; end
   def seek(x); @_io.seek(x); end
+  def pos; @_io.pos; end
 
   # Test endianness of the platform
   @@big_endian = [0x0102].pack('s') == [0x0102].pack('n')
