@@ -12,7 +12,7 @@ class Struct
   end
 
   def self.from_file(filename)
-    self.new(KaitaiStream.open(filename))
+    self.new(Stream.open(filename))
   end
 
   attr_reader :_io
@@ -21,7 +21,7 @@ end
 class Stream
   class UnexpectedDataError < Exception
     def initialize(actual, expected)
-      super("Unexpected fixed contents: got #{KaitaiStream.format_hex(actual)}, was waiting for #{KaitaiStream.format_hex(expected)}")
+      super("Unexpected fixed contents: got #{Stream.format_hex(actual)}, was waiting for #{Stream.format_hex(expected)}")
       @actual = actual
       @expected = expected
     end
