@@ -166,6 +166,10 @@ class KaitaiStream
 
   # ========================================================================
 
+  def read_str_eos(encoding)
+    read_bytes_full.force_encoding(encoding)
+  end
+
   def read_str_byte_limit(byte_size, encoding)
     read_bytes(byte_size).force_encoding(encoding)
   end
