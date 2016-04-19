@@ -1,6 +1,8 @@
 require 'stringio'
 
-class KaitaiStruct
+module Kaitai
+
+class Struct
   def initialize(_io, _parent = nil, _root = self)
     @_io = _io
     @_parent = _parent
@@ -14,7 +16,7 @@ class KaitaiStruct
   attr_reader :_io
 end
 
-class KaitaiStream
+class Stream
   class UnexpectedDataError < Exception
     def initialize(actual, expected)
       super("Unexpected fixed contents: got #{KaitaiStream.format_hex(actual)}, was waiting for #{KaitaiStream.format_hex(expected)}")
@@ -225,4 +227,6 @@ class KaitaiStream
   def self.format_hex(arr)
     arr.map { |x| sprintf('%02X', x) }.join(' ')
   end
+end
+
 end
