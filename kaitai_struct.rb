@@ -190,6 +190,25 @@ class KaitaiStream
     }
   end
 
+  # ========================================================================
+
+  def process_rotate_left(data, amount, group_size)
+    raise NotImplementedError.new("unable to rotate group #{group_size} bytes yet") unless group_size == 1
+
+    mask = group_size * 8 - 1
+    anti_amount = -amount & mask
+
+    # NB: actually, left bit shift (<<) in Ruby would have required
+    # truncation to type_bits size (i.e. something like "& 0xff" for
+    # group_size == 8), but we can skip this one, because later these
+    # number would be packed with Array#pack, which will do truncation
+    # anyway
+
+    data.bytes.map { |x| (x << amount) | (x >> anti_amount) }.pack('C*')
+  end
+
+  # ========================================================================
+
   private
   SIGN_MASK_16 = (1 << (16 - 1))
   SIGN_MASK_32 = (1 << (32 - 1))
