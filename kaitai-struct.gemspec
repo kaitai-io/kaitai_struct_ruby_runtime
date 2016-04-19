@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-require File.expand_path("../lib/kaitai/struct", __FILE__)
+require File.expand_path("../lib/kaitai/struct/struct", __FILE__)
 require 'date'
 
 Gem::Specification.new { |s|
