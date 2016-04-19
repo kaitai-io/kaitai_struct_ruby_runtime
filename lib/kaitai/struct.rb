@@ -3,6 +3,8 @@ require 'stringio'
 module Kaitai
 
 class Struct
+  VERSION = '0.3'
+
   def initialize(_io, _parent = nil, _root = self)
     @_io = _io
     @_parent = _parent
