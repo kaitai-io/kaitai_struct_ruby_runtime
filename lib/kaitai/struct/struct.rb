@@ -3,7 +3,7 @@ require 'stringio'
 module Kaitai
 module Struct
 
-VERSION = '0.3'
+VERSION = '0.4'
 
 class Struct
 
@@ -15,6 +15,35 @@ class Struct
 
   def self.from_file(filename)
     self.new(Stream.open(filename))
+  end
+
+  ##
+  # Implementation of `inspect` to aid debugging (at the very least,
+  # to aid exception raising) for KS-based classes. This one uses a
+  # bit terser syntax than Ruby's default one, purposely skips any
+  # internal fields (i.e. starting with `_`, such as `_io`, `_parent`
+  # and `_root`) to reduce confusion, and does no recursivity tracking
+  # (as proper general-purpose `inspect` implementation should do)
+  # because there are no endless recursion in KS-based classes by
+  # design (except for already mentioned internal navigation
+  # variables).
+  def inspect
+    vars = []
+    instance_variables.each { |nsym|
+      nstr = nsym.to_s
+
+      # skip all internal variables
+      next if nstr[0..1] == '@_'
+
+      # strip mandatory `@` at the beginning of the name for brevity
+      nstr = nstr[1..-1]
+
+      nvalue = instance_variable_get(nsym).inspect
+
+      vars << "#{nstr}=#{nvalue}"
+    }
+
+    "#{self.class}(#{vars.join(' ')})"
   end
 
   attr_reader :_io
