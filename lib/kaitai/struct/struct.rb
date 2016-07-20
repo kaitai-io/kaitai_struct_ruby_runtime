@@ -231,6 +231,22 @@ class Stream
 
   # ========================================================================
 
+  def process_xor_one(data, key)
+    data.bytes.map { |x| x ^ key }.pack('C*')
+  end
+
+  def process_xor_many(data, key)
+    kb = key.bytes
+    kl = kb.size
+    ki = 0
+    data.bytes.map { |x|
+      r = x ^ kb[ki]
+      ki += 1
+      ki = 0 if ki >= kl
+      r
+    }.pack('C*')
+  end
+
   def process_rotate_left(data, amount, group_size)
     raise NotImplementedError.new("unable to rotate group #{group_size} bytes yet") unless group_size == 1
 
