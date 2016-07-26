@@ -183,6 +183,26 @@ class Stream
   end
 
   # ========================================================================
+  # Floating point
+  # ========================================================================
+  
+  def read_f4le
+    read_bytes(4).unpack('e')[0]
+  end
+  
+  def read_f8le
+    read_bytes(8).unpack('E')[0]
+  end
+  
+  def read_f4be
+    read_bytes(4).unpack('g')[0]
+  end
+  
+  def read_f8be
+    read_bytes(8).unpack('G')[0]
+  end
+
+  # ========================================================================
 
   def read_bytes_full
     @_io.read
