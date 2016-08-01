@@ -72,52 +72,84 @@ class Stream
     self.new(File.open(filename, 'rb:ASCII-8BIT'))
   end
 
+  # Test endianness of the platform
+  @@big_endian = [0x0102].pack('s') == [0x0102].pack('n')
+
   # ========================================================================
-  # Forwarding of IO API calls
+  # Stream positioning
   # ========================================================================
 
   def eof?; @_io.eof?; end
   def seek(x); @_io.seek(x); end
   def pos; @_io.pos; end
 
-  # Test endianness of the platform
-  @@big_endian = [0x0102].pack('s') == [0x0102].pack('n')
+  # ========================================================================
+  # Integer numbers
+  # ========================================================================
 
-  def ensure_fixed_contents(size, expected)
-    buf = @_io.read(size)
-    actual = buf.bytes
-    if actual != expected
-      raise UnexpectedDataError.new(actual, expected)
-    end
-    buf
+  # ------------------------------------------------------------------------
+  # Signed
+  # ------------------------------------------------------------------------
+
+  def read_s1
+    read_bytes(1).unpack('c')[0]
   end
 
-  # ========================================================================
+  # ........................................................................
+  # Big-endian
+  # ........................................................................
+
+  def read_s2be
+    to_signed(read_u2be, SIGN_MASK_16)
+  end
+
+  def read_s4be
+    to_signed(read_u4be, SIGN_MASK_32)
+  end
+
+  if @@big_endian
+    def read_s8be
+      read_bytes(8).unpack('q')[0]
+    end
+  else
+    def read_s8be
+      to_signed(read_u8be, SIGN_MASK_64)
+    end
+  end
+
+  # ........................................................................
+  # Little-endian
+  # ........................................................................
+
+  def read_s2le
+    to_signed(read_u2le, SIGN_MASK_16)
+  end
+
+  def read_s4le
+    to_signed(read_u4le, SIGN_MASK_32)
+  end
+
+  unless @@big_endian
+    def read_s8le
+      read_bytes(8).unpack('q')[0]
+    end
+  else
+    def read_s8le
+      to_signed(read_u8le, SIGN_MASK_64)
+    end
+  end
+
+  # ------------------------------------------------------------------------
   # Unsigned
-  # ========================================================================
+  # ------------------------------------------------------------------------
 
   def read_u1
     read_bytes(1).unpack('C')[0]
   end
 
-  def read_u2le
-    read_bytes(2).unpack('v')[0]
-  end
-
-  def read_u4le
-    read_bytes(4).unpack('V')[0]
-  end
-
-  unless @@big_endian
-    def read_u8le
-      read_bytes(8).unpack('Q')[0]
-    end
-  else
-    def read_u8le
-      a, b = read_bytes(8).unpack('VV')
-      (b << 32) + a
-    end
-  end
+  # ........................................................................
+  # Big-endian
+  # ........................................................................
 
   def read_u2be
     read_bytes(2).unpack('n')[0]
@@ -138,75 +170,60 @@ class Stream
     end
   end
 
-  # ========================================================================
-  # Signed
-  # ========================================================================
+  # ........................................................................
+  # Little-endian
+  # ........................................................................
 
-  def read_s1
-    read_bytes(1).unpack('c')[0]
+  def read_u2le
+    read_bytes(2).unpack('v')[0]
   end
 
-  def read_s2le
-    to_signed(read_u2le, SIGN_MASK_16)
-  end
-
-  def read_s4le
-    to_signed(read_u4le, SIGN_MASK_32)
+  def read_u4le
+    read_bytes(4).unpack('V')[0]
   end
 
   unless @@big_endian
-    def read_s8le
-      read_bytes(8).unpack('q')[0]
+    def read_u8le
+      read_bytes(8).unpack('Q')[0]
     end
   else
-    def read_s8le
-      to_signed(read_u8le, SIGN_MASK_64)
-    end
-  end
-
-  def read_s2be
-    to_signed(read_u2be, SIGN_MASK_16)
-  end
-
-  def read_s4be
-    to_signed(read_u4be, SIGN_MASK_32)
-  end
-
-  if @@big_endian
-    def read_s8be
-      read_bytes(8).unpack('q')[0]
-    end
-  else
-    def read_s8be
-      to_signed(read_u8be, SIGN_MASK_64)
+    def read_u8le
+      a, b = read_bytes(8).unpack('VV')
+      (b << 32) + a
     end
   end
 
   # ========================================================================
-  # Floating point
+  # Floating point numbers
   # ========================================================================
-  
-  def read_f4le
-    read_bytes(4).unpack('e')[0]
-  end
-  
-  def read_f8le
-    read_bytes(8).unpack('E')[0]
-  end
-  
+
+  # ------------------------------------------------------------------------
+  # Big-endian
+  # ------------------------------------------------------------------------
+
   def read_f4be
     read_bytes(4).unpack('g')[0]
   end
-  
+
   def read_f8be
     read_bytes(8).unpack('G')[0]
   end
 
-  # ========================================================================
+  # ------------------------------------------------------------------------
+  # Little-endian
+  # ------------------------------------------------------------------------
 
-  def read_bytes_full
-    @_io.read
+  def read_f4le
+    read_bytes(4).unpack('e')[0]
   end
+
+  def read_f8le
+    read_bytes(8).unpack('E')[0]
+  end
+
+  # ========================================================================
+  # Byte arrays
+  # ========================================================================
 
   def read_bytes(n)
     r = @_io.read(n)
@@ -219,6 +236,21 @@ class Stream
     r
   end
 
+  def read_bytes_full
+    @_io.read
+  end
+
+  def ensure_fixed_contents(size, expected)
+    buf = @_io.read(size)
+    actual = buf.bytes
+    if actual != expected
+      raise UnexpectedDataError.new(actual, expected)
+    end
+    buf
+  end
+
+  # ========================================================================
+  # Strings
   # ========================================================================
 
   def read_str_eos(encoding)
@@ -249,6 +281,8 @@ class Stream
     }
   end
 
+  # ========================================================================
+  # Byte array processing
   # ========================================================================
 
   def process_xor_one(data, key)
