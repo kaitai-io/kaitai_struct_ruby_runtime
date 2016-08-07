@@ -82,6 +82,7 @@ class Stream
   def eof?; @_io.eof?; end
   def seek(x); @_io.seek(x); end
   def pos; @_io.pos; end
+  def size; @_io.size; end
 
   # ========================================================================
   # Integer numbers
