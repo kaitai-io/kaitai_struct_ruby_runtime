@@ -49,7 +49,27 @@ class Struct
   attr_reader :_io
 end
 
+##
+# Kaitai::Stream is an implementation of
+# {https://github.com/kaitai-io/kaitai_struct/wiki/Kaitai-Struct-stream-API
+# Kaitai Struct stream API} for Ruby. It's implemented as a wrapper
+# for generic IO objects.
+#
+# It provides a wide variety of simple methods to read (parse) binary
+# representations of primitive types, such as integer and floating
+# point numbers, byte arrays and strings, and also provides stream
+# positioning / navigation methods with unified cross-language and
+# cross-toolkit semantics.
+#
+# Typically, end users won't access Kaitai Stream class manually, but
+# would describe a binary structure format using .ksy language and
+# then would use Kaitai Struct compiler to generate source code in
+# desired target language.  That code, in turn, would use this class
+# and API to do the actual parsing job.
 class Stream
+  ##
+  # Exception class for an error that occurs when some fixed content
+  # was expected to appear, but actual data read was different.
   class UnexpectedDataError < Exception
     def initialize(actual, expected)
       super("Unexpected fixed contents: got #{Stream.format_hex(actual)}, was waiting for #{Stream.format_hex(expected)}")
@@ -58,6 +78,10 @@ class Stream
     end
   end
 
+  ##
+  # Constructs new Kaitai Stream object.
+  # @param arg [String, IO] if String, it will be used as byte array to read data from;
+  #   if IO, if will be used literally as source of data
   def initialize(arg)
     if arg.is_a?(String)
       @_io = StringIO.new(arg)
@@ -68,6 +92,10 @@ class Stream
     end
   end
 
+  ##
+  # Convenience method to create a Kaitai Stream object, opening a
+  # local file with a given filename.
+  # @param filename [String] local file to open
   def self.open(filename)
     self.new(File.open(filename, 'rb:ASCII-8BIT'))
   end
@@ -79,9 +107,24 @@ class Stream
   # Stream positioning
   # ========================================================================
 
+  ##
+  # Check if stream pointer is at the end of stream.
+  # @return [true, false] true if we are located at the end of the stream
   def eof?; @_io.eof?; end
+
+  ##
+  # Set stream pointer to designated position.
+  # @param x [Fixnum] new position (offset in bytes from the beginning of the stream)
   def seek(x); @_io.seek(x); end
+
+  ##
+  # Get current position of a stream pointer.
+  # @return [Fixnum] pointer position, number of bytes from the beginning of the stream
   def pos; @_io.pos; end
+
+  ##
+  # Get total size of the stream in bytes.
+  # @return [Fixnum] size of the stream in bytes
   def size; @_io.size; end
 
   # ========================================================================
