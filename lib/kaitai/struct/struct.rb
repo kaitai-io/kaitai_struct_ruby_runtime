@@ -362,7 +362,7 @@ class Stream
   # @param data [String] data to process
   # @param key [Fixnum] value to XOR with
   # @return [String] processed data
-  def process_xor_one(data, key)
+  def self.process_xor_one(data, key)
     data.bytes.map { |x| x ^ key }.pack('C*')
   end
 
@@ -373,7 +373,7 @@ class Stream
   # @param data [String] data to process
   # @param key [String] array of bytes to XOR with
   # @return [String] processed data
-  def process_xor_many(data, key)
+  def self.process_xor_many(data, key)
     kb = key.bytes
     kl = kb.size
     ki = 0
@@ -394,7 +394,7 @@ class Stream
   # @param amount [Fixnum] number of bits to shift by
   # @param group_size [Fixnum] number of bytes per group to shift
   # @return [String] copy of source array with requested shift applied
-  def process_rotate_left(data, amount, group_size)
+  def self.process_rotate_left(data, amount, group_size)
     raise NotImplementedError.new("unable to rotate group #{group_size} bytes yet") unless group_size == 1
 
     mask = group_size * 8 - 1
