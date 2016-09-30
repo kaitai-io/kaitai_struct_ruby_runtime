@@ -59,7 +59,7 @@ class Struct
 end
 
 ##
-# Kaitai::Stream is an implementation of
+# Kaitai::Struct::Stream is an implementation of
 # {https://github.com/kaitai-io/kaitai_struct/wiki/Kaitai-Struct-stream-API
 # Kaitai Struct stream API} for Ruby. It's implemented as a wrapper
 # for generic IO objects.
@@ -358,31 +358,46 @@ class Stream
 
   ##
   # Performs a XOR processing with given data, XORing every byte of
-  # input with a single given value.
+  # input with a single given value. Uses pure Ruby implementation suggested
+  # by [Thomas Leitner](https://github.com/gettalong), borrowed from
+  # https://github.com/fny/xorcist/blob/master/bin/benchmark
   # @param data [String] data to process
   # @param key [Fixnum] value to XOR with
   # @return [String] processed data
   def self.process_xor_one(data, key)
-    data.bytes.map { |x| x ^ key }.pack('C*')
+    out = data.dup
+    i = 0
+    max = data.length
+    while i < max
+      out.setbyte(i, data.getbyte(i) ^ key)
+      i += 1
+    end
+    out
   end
 
   ##
   # Performs a XOR processing with given data, XORing every byte of
   # input with a key array, repeating key array many times, if
   # necessary (i.e. if data array is longer than key array).
+  # Uses pure Ruby implementation suggested by
+  # [Thomas Leitner](https://github.com/gettalong), borrowed from
+  # https://github.com/fny/xorcist/blob/master/bin/benchmark
   # @param data [String] data to process
   # @param key [String] array of bytes to XOR with
   # @return [String] processed data
   def self.process_xor_many(data, key)
-    kb = key.bytes
-    kl = kb.size
+    out = data.dup
+    kl = key.length
     ki = 0
-    data.bytes.map { |x|
-      r = x ^ kb[ki]
+    i = 0
+    max = data.length
+    while i < max
+      out.setbyte(i, data.getbyte(i) ^ key.getbyte(ki))
       ki += 1
       ki = 0 if ki >= kl
-      r
-    }.pack('C*')
+      i += 1
+    end
+    out
   end
 
   ##
