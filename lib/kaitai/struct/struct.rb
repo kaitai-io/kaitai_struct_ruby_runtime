@@ -426,6 +426,15 @@ class Stream
 
   # ========================================================================
 
+  ##
+  # Resolves value using enum: if the value is not found in the map,
+  # we'll just use literal value per se.
+  def self.resolve_enum(enum_map, value)
+    enum_map[value] || value
+  end
+
+  # ========================================================================
+
   private
   SIGN_MASK_16 = (1 << (16 - 1))
   SIGN_MASK_32 = (1 << (32 - 1))
