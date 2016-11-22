@@ -306,12 +306,12 @@ class Stream
   # Reads next len bytes from the stream and ensures that they match
   # expected fixed byte array. If they differ, throws a
   # {UnexpectedDataError} runtime exception.
-  # @param len [Fixnum] number of bytes to read
   # @param expected [String] contents to be expected
   # @return [String] read bytes as byte array, which are guaranteed to
   #   equal to expected
   # @raise [UnexpectedDataError]
-  def ensure_fixed_contents(len, expected)
+  def ensure_fixed_contents(expected)
+    len = expected.bytesize
     buf = @_io.read(len)
     actual = buf.bytes
     if actual != expected
