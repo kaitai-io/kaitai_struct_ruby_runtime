@@ -312,12 +312,9 @@ class Stream
   # @raise [UnexpectedDataError]
   def ensure_fixed_contents(expected)
     len = expected.bytesize
-    buf = @_io.read(len)
-    actual = buf.bytes
-    if actual != expected
-      raise UnexpectedDataError.new(actual, expected)
-    end
-    buf
+    actual = @_io.read(len)
+    raise UnexpectedDataError.new(actual, expected) if actual != expected
+    actual
   end
 
   # ========================================================================
@@ -445,7 +442,7 @@ class Stream
   end
 
   def self.format_hex(arr)
-    arr.map { |x| sprintf('%02X', x) }.join(' ')
+    arr.unpack('H*')[0].gsub(/(..)/, '\1 ').chop
   end
 end
 
