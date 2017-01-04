@@ -99,6 +99,8 @@ class Stream
     else
       raise TypeError.new('can be initialized with IO or String only')
     end
+    @bits_left = 0
+    @bits = 0
   end
 
   ##
@@ -272,6 +274,40 @@ class Stream
 
   def read_f8le
     read_bytes(8).unpack('E')[0]
+  end
+
+  # ========================================================================
+  # Unaligned bit values
+  # ========================================================================
+
+  def read_bits_int(n)
+    bits_needed = n - @bits_left
+    if bits_needed > 0
+      # 1 bit  => 1 byte
+      # 8 bits => 1 byte
+      # 9 bits => 2 bytes
+      bytes_needed = ((bits_needed - 1) / 8) + 1
+      buf = read_bytes(bytes_needed)
+      buf.each_byte { |byte|
+        @bits <<= 8
+        @bits |= byte
+        @bits_left += 8
+      }
+    end
+
+    # raw mask with required number of 1s, starting from lowest bit
+    mask = (1 << n) - 1
+    # shift mask to align with highest bits available in @bits
+    shift_bits = @bits_left - n
+    mask <<= shift_bits
+    # derive reading result
+    res = (@bits & mask) >> shift_bits
+    # clear top bits that we've just read => AND with 1s
+    @bits_left -= n
+    mask = (1 << @bits_left) - 1
+    @bits &= mask
+
+    res
   end
 
   # ========================================================================
