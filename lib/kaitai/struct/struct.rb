@@ -99,8 +99,7 @@ class Stream
     else
       raise TypeError.new('can be initialized with IO or String only')
     end
-    @bits_left = 0
-    @bits = 0
+    align_to_byte
   end
 
   ##
@@ -279,6 +278,11 @@ class Stream
   # ========================================================================
   # Unaligned bit values
   # ========================================================================
+
+  def align_to_byte
+    @bits_left = 0
+    @bits = 0
+  end
 
   def read_bits_int(n)
     bits_needed = n - @bits_left
