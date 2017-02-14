@@ -342,6 +342,26 @@ class Stream
     @_io.read
   end
 
+  def read_bytes_term(term, include_term, consume_term, eos_error)
+    r = ''
+    loop {
+      if @_io.eof?
+        if eos_error
+          raise EOFError.new("end of stream reached, but no terminator #{term} found")
+        else
+          return r
+        end
+      end
+      c = @_io.getc
+      if c.ord == term
+        r << c if include_term
+        @_io.seek(@_io.pos - 1) unless consume_term
+        return r
+      end
+      r << c
+    }
+  end
+
   ##
   # Reads next len bytes from the stream and ensures that they match
   # expected fixed byte array. If they differ, throws a
@@ -357,36 +377,22 @@ class Stream
     actual
   end
 
-  # ========================================================================
-  # Strings
-  # ========================================================================
-
-  def read_str_eos(encoding)
-    read_bytes_full.force_encoding(encoding)
+  def self.bytes_strip_right(bytes, pad_byte)
+    new_len = bytes.length
+    while bytes.getbyte(new_len - 1) == pad_byte
+      new_len -= 1
+    end
+    bytes[0, new_len]
   end
 
-  def read_str_byte_limit(byte_size, encoding)
-    read_bytes(byte_size).force_encoding(encoding)
-  end
-
-  def read_strz(encoding, term, include_term, consume_term, eos_error)
-    r = ''
-    loop {
-      if @_io.eof?
-        if eos_error
-          raise EOFError.new("end of stream reached, but no terminator #{term} found")
-        else
-          return r.force_encoding(encoding)
-        end
-      end
-      c = @_io.getc
-      if c.ord == term
-        r << c if include_term
-        @_io.seek(@_io.pos - 1) unless consume_term
-        return r.force_encoding(encoding)
-      end
-      r << c
-    }
+  def self.bytes_terminate(bytes, term, include_term)
+    new_len = 0
+    max_len = bytes.length
+    while bytes.getbyte(new_len) != term and new_len < max_len
+      new_len += 1
+    end
+    new_len += 1 if include_term and new_len < max_len
+    bytes[0, new_len]
   end
 
   # ========================================================================
