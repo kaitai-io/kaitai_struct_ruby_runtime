@@ -113,9 +113,7 @@ class Stream
   # Test endianness of the platform
   @@big_endian = [0x0102].pack('s') == [0x0102].pack('n')
 
-  # ========================================================================
-  # Stream positioning
-  # ========================================================================
+  # @!group Stream positioning
 
   ##
   # Check if stream pointer is at the end of stream.
@@ -137,9 +135,9 @@ class Stream
   # @return [Fixnum] size of the stream in bytes
   def size; @_io.size; end
 
-  # ========================================================================
-  # Integer numbers
-  # ========================================================================
+  # @!endgroup
+
+  # @!group Integer numbers
 
   # ------------------------------------------------------------------------
   # Signed
@@ -247,9 +245,9 @@ class Stream
     end
   end
 
-  # ========================================================================
-  # Floating point numbers
-  # ========================================================================
+  # @!endgroup
+
+  # @!group Floating point numbers
 
   # ------------------------------------------------------------------------
   # Big-endian
@@ -275,9 +273,9 @@ class Stream
     read_bytes(8).unpack('E')[0]
   end
 
-  # ========================================================================
-  # Unaligned bit values
-  # ========================================================================
+  # @!endgroup
+
+  # @!group Unaligned bit values
 
   def align_to_byte
     @bits_left = 0
@@ -314,9 +312,9 @@ class Stream
     res
   end
 
-  # ========================================================================
-  # Byte arrays
-  # ========================================================================
+  # @!endgroup
+
+  # @!group Byte arrays
 
   ##
   # Reads designated number of bytes from the stream.
@@ -395,9 +393,9 @@ class Stream
     bytes[0, new_len]
   end
 
-  # ========================================================================
-  # Byte array processing
-  # ========================================================================
+  # @!endgroup
+
+  # @!group Byte array processing
 
   ##
   # Performs a XOR processing with given data, XORing every byte of
@@ -467,7 +465,7 @@ class Stream
     data.bytes.map { |x| (x << amount) | (x >> anti_amount) }.pack('C*')
   end
 
-  # ========================================================================
+  # @!endgroup
 
   ##
   # Resolves value using enum: if the value is not found in the map,
