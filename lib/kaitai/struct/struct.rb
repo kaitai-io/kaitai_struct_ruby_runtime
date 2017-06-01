@@ -88,6 +88,13 @@ class Stream
   end
 
   ##
+  # Error that occurs when default endianness should be decided with
+  # a switch, but nothing matches (although using endianness expression
+  # implies that there should be some positive result).
+  class UndecidedEndiannessError < Exception
+  end
+
+  ##
   # Constructs new Kaitai Stream object.
   # @param arg [String, IO] if String, it will be used as byte array to read data from;
   #   if IO, if will be used literally as source of data
