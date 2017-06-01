@@ -384,9 +384,10 @@ class Stream
 
   def self.bytes_strip_right(bytes, pad_byte)
     new_len = bytes.length
-    while bytes.getbyte(new_len - 1) == pad_byte
+    while new_len > 0 and bytes.getbyte(new_len - 1) == pad_byte
       new_len -= 1
     end
+
     bytes[0, new_len]
   end
 
