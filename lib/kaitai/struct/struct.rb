@@ -87,12 +87,6 @@ class Stream
     end
   end
 
-  ##
-  # Error that occurs when default endianness should be decided with
-  # a switch, but nothing matches (although using endianness expression
-  # implies that there should be some positive result).
-  class UndecidedEndiannessError < Exception
-  end
 
   ##
   # Constructs new Kaitai Stream object.
@@ -495,6 +489,48 @@ class Stream
 
   def self.format_hex(arr)
     arr.unpack('H*')[0].gsub(/(..)/, '\1 ').chop
+  end
+end
+
+##
+# Common ancestor for all error originating from Kaitai Struct usage.
+# Stores KSY source path, pointing to an element supposedly guilty of
+# an error.
+class KaitaiStructError < Exception
+  def initialize(msg, src_path)
+    super("#{src_path}: #{msg}")
+    @src_path = src_path
+  end
+end
+
+##
+# Error that occurs when default endianness should be decided with
+# a switch, but nothing matches (although using endianness expression
+# implies that there should be some positive result).
+class UndecidedEndiannessError < KaitaiStructError
+  def initialize(src_path)
+    super("Unable to decide on endianness for a type", src_path)
+  end
+end
+
+##
+# Common ancestor for all validation failures. Stores pointer to
+# KaitaiStream IO object which was involved in an error.
+class ValidationFailedError < KaitaiStructError
+  def initialize(msg, io, src_path)
+    super("at pos #{io.pos}: validation failed: #{msg}", src_path)
+    @io = io
+  end
+end
+
+##
+# Signals validation failure: we required "actual" value to be equal to
+# "expected", but it turned out that it's not.
+class ValidationNotEqualError < ValidationFailedError
+  def initialize(expected, actual, io, src_path)
+    super("not equal, expected #{expected.inspect}, but got #{actual.inspect}", io, src_path)
+    @expected = expected
+    @actual = actual
   end
 end
 
