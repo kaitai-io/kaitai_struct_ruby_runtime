@@ -509,7 +509,7 @@ end
 # implies that there should be some positive result).
 class UndecidedEndiannessError < KaitaiStructError
   def initialize(src_path)
-    super("Unable to decide on endianness for a type", src_path)
+    super("unable to decide on endianness for a type", src_path)
   end
 end
 
