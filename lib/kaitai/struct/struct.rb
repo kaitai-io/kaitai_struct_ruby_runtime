@@ -77,6 +77,9 @@ end
 # and API to do the actual parsing job.
 class Stream
   ##
+  # Unused since Kaitai Struct Compiler v0.9+ - compatibility with
+  # older versions.
+  #
   # Exception class for an error that occurs when some fixed content
   # was expected to appear, but actual data read was different.
   class UnexpectedDataError < Exception
@@ -362,6 +365,9 @@ class Stream
   end
 
   ##
+  # Unused since Kaitai Struct Compiler v0.9+ - compatibility with
+  # older versions.
+  #
   # Reads next len bytes from the stream and ensures that they match
   # expected fixed byte array. If they differ, throws a
   # {UnexpectedDataError} runtime exception.
