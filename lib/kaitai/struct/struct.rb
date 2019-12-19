@@ -540,5 +540,27 @@ class ValidationNotEqualError < ValidationFailedError
   end
 end
 
+##
+# Signals validation failure: we required "actual" value to be greater
+# than or equal to "min", but it turned out that it's not.
+class ValidationLessThanError < ValidationFailedError
+  def initialize(min, actual, io, src_path)
+    super("not in range, min #{min.inspect}, but got #{actual.inspect}", io, src_path)
+    @min = min
+    @actual = actual
+  end
+end
+
+##
+# Signals validation failure: we required "actual" value to be less
+# than or equal to "max", but it turned out that it's not.
+class ValidationGreaterThanError < ValidationFailedError
+  def initialize(max, actual, io, src_path)
+    super("not in range, max #{max.inspect}, but got #{actual.inspect}", io, src_path)
+    @max = max
+    @actual = actual
+  end
+end
+
 end
 end
