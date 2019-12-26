@@ -562,5 +562,15 @@ class ValidationGreaterThanError < ValidationFailedError
   end
 end
 
+##
+# Signals validation failure: we required "actual" value to be any of
+# the given list, but it turned out that it's not.
+class ValidationNotAnyOfError < ValidationFailedError
+  def initialize(actual, io, src_path)
+    super("not any of the list, got #{actual.inspect}", io, src_path)
+    @actual = actual
+  end
+end
+
 end
 end
