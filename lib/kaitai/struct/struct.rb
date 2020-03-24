@@ -114,6 +114,12 @@ class Stream
     self.new(File.open(filename, 'rb:ASCII-8BIT'))
   end
 
+  ##
+  # Closes underlying IO object.
+  def close
+    @_io.close
+  end
+
   # Test endianness of the platform
   @@big_endian = [0x0102].pack('s') == [0x0102].pack('n')
 
