@@ -322,6 +322,31 @@ class Stream
     res
   end
 
+  def read_bits_int_le(n)
+    bits_needed = n - @bits_left
+    if bits_needed > 0
+      # 1 bit  => 1 byte
+      # 8 bits => 1 byte
+      # 9 bits => 2 bytes
+      bytes_needed = ((bits_needed - 1) / 8) + 1
+      buf = read_bytes(bytes_needed)
+      buf.each_byte { |byte|
+        @bits |= (byte << @bits_left)
+        @bits_left += 8
+      }
+    end
+
+    # raw mask with required number of 1s, starting from lowest bit
+    mask = (1 << n) - 1
+    # derive reading result
+    res = @bits & mask
+    # remove bottom bits that we've just read by shifting
+    @bits >>= n
+    @bits_left -= n
+
+    res
+  end
+
   # @!endgroup
 
   # @!group Byte arrays
