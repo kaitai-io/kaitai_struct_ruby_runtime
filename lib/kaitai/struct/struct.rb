@@ -292,7 +292,7 @@ class Stream
     @bits = 0
   end
 
-  def read_bits_int(n)
+  def read_bits_int_be(n)
     bits_needed = n - @bits_left
     if bits_needed > 0
       # 1 bit  => 1 byte
@@ -320,6 +320,12 @@ class Stream
     @bits &= mask
 
     res
+  end
+
+  # Unused since Kaitai Struct Compiler v0.9+ - compatibility with
+  # older versions.
+  def read_bits_int(n)
+    read_bits_int_be(n)
   end
 
   def read_bits_int_le(n)
