@@ -607,5 +607,15 @@ class ValidationNotAnyOfError < ValidationFailedError
   end
 end
 
+##
+# Signals validation failure: we required "actual" value to match
+# the expression, but it turned out that it doesn't.
+class ValidationExprError < ValidationFailedError
+  def initialize(actual, io, src_path)
+    super("not matching the expression, got #{actual.inspect}", io, src_path)
+    @actual = actual
+  end
+end
+
 end
 end
