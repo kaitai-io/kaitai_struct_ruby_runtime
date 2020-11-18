@@ -1,5 +1,8 @@
 # Kaitai Struct: runtime library for Ruby
 
+[![Gem version](https://img.shields.io/gem/v/kaitai-struct)](https://rubygems.org/gems/kaitai-struct/)
+[![Gem downloads](https://img.shields.io/gem/dt/kaitai-struct)](https://rubygems.org/gems/kaitai-struct/#:~:text=TOTAL%20DOWNLOADS)
+
 This library implements Kaitai Struct API for Ruby.
 
 Kaitai Struct is a declarative language used for describe various binary
