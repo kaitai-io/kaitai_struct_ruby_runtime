@@ -558,14 +558,6 @@ end
 # Common ancestor for all validation failures. Stores pointer to
 # KaitaiStream IO object which was involved in an error.
 class ValidationFailedError < KaitaiStructError
-  def self.strToHex(str)
-    str
-      .split(//)
-      .map { |b| b.unpack('H2')[0] }
-      .inspect()
-      .gsub(/[",]/, '')
-  end
-
   def initialize(msg, io, src_path)
     super("at pos #{io.pos}: validation failed: #{msg}", src_path)
     @io = io
@@ -577,7 +569,7 @@ end
 # "expected", but it turned out that it's not.
 class ValidationNotEqualError < ValidationFailedError
   def initialize(expected, actual, io, src_path)
-    super("not equal, expected #{self.class.strToHex(expected)}, but got #{self.class.strToHex(actual)}", io, src_path)
+    super("not equal, expected [#{Stream.format_hex(expected)}], but got [#{Stream.format_hex(actual)}]", io, src_path)
     @expected = expected
     @actual = actual
   end
