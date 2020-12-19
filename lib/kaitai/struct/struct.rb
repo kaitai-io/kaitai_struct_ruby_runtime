@@ -528,8 +528,8 @@ class Stream
     (x & ~mask) - (x & mask)
   end
 
-  def self.format_hex(arr)
-    arr.unpack('H*')[0].gsub(/(..)/, '\1 ').chop
+  def self.format_hex(bytes)
+    bytes.unpack('H*')[0].gsub(/(..)/, '\1 ').chop
   end
 end
 
