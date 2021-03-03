@@ -569,7 +569,12 @@ end
 # "expected", but it turned out that it's not.
 class ValidationNotEqualError < ValidationFailedError
   def initialize(expected, actual, io, src_path)
-    super("not equal, expected [#{Stream.format_hex(expected)}], but got [#{Stream.format_hex(actual)}]", io, src_path)
+    begin
+      super("not equal, expected [#{Stream.format_hex(expected)}], but got [#{Stream.format_hex(actual)}]", io, src_path)
+    rescue  NoMethodError => e
+      super("not equal, expected #{expected.inspect}, but got #{actual.inspect}", io, src_path)
+    end
+
     @expected = expected
     @actual = actual
   end
