@@ -533,7 +533,7 @@ class Stream
   end
 
   ###
-  # Guess about given args being byte arrays most likely.
+  # Guess if the given args are most likely byte arrays.
   # <p>
   # There's no way to know for sure, but {@code Encoding::ASCII_8BIT} is a special encoding that is
   # usually used for a byte array(/string), not a character string. For those reasons, that encoding
