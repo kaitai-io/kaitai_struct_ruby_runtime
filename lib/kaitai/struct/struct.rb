@@ -533,11 +533,11 @@ class Stream
   end
 
   ###
-  # Guess about given arg being a byte-array most likely.
+  # Guess about given args being byte arrays most likely.
   # <p>
-  # There's no way to know for sure in Ruby, because the type {@code String} is used in both cases,
-  # but especially in the context of KS things are differently likely. This especially means that an
-  # encoding of {@code ASCII_8BIT} is considered to be VERY unlikely for human readable texts.
+  # There's no way to know for sure, but {@code Encoding::ASCII_8BIT} is a special encoding that is
+  # usually used for a byte array(/string), not a character string. For those reasons, that encoding
+  # is NOT planned to be allowed for human readable texts by KS in general as well.
   # </p>
   # @param args [...] Something to check.
   # @see <a href="https://ruby-doc.org/core-3.0.0/Encoding.html">Encoding</a>
