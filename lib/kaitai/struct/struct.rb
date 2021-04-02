@@ -60,9 +60,8 @@ end
 
 ##
 # Kaitai::Struct::Stream is an implementation of
-# {https://github.com/kaitai-io/kaitai_struct/wiki/Kaitai-Struct-stream-API
-# Kaitai Struct stream API} for Ruby. It's implemented as a wrapper
-# for generic IO objects.
+# {Kaitai Stream API}[https://doc.kaitai.io/stream_api.html] for Ruby.
+# It's implemented as a wrapper for generic IO objects.
 #
 # It provides a wide variety of simple methods to read (parse) binary
 # representations of primitive types, such as integer and floating
