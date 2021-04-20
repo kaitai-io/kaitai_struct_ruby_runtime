@@ -543,8 +543,7 @@ class Stream
   # @see <a href="https://github.com/kaitai-io/kaitai_struct/issues/116">List of supported encodings</a>
   #
   def self.is_byte_array?(*args)
-    found = args.select { |arg| arg.is_a?(String) and (arg.encoding == Encoding::ASCII_8BIT) }
-    found.length == args.length
+    args.all? { |arg| arg.is_a?(String) and (arg.encoding == Encoding::ASCII_8BIT) }
   end
 end
 
