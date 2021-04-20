@@ -530,6 +530,22 @@ class Stream
   def self.format_hex(bytes)
     bytes.unpack('H*')[0].gsub(/(..)/, '\1 ').chop
   end
+
+  ###
+  # Guess if the given args are most likely byte arrays.
+  # <p>
+  # There's no way to know for sure, but {@code Encoding::ASCII_8BIT} is a special encoding that is
+  # usually used for a byte array(/string), not a character string. For those reasons, that encoding
+  # is NOT planned to be allowed for human readable texts by KS in general as well.
+  # </p>
+  # @param args [...] Something to check.
+  # @see <a href="https://ruby-doc.org/core-3.0.0/Encoding.html">Encoding</a>
+  # @see <a href="https://github.com/kaitai-io/kaitai_struct/issues/116">List of supported encodings</a>
+  #
+  def self.is_byte_array?(*args)
+    found = args.select { |arg| arg.is_a?(String) and (arg.encoding == Encoding::ASCII_8BIT) }
+    found.length == args.length
+  end
 end
 
 ##
@@ -568,7 +584,12 @@ end
 # "expected", but it turned out that it's not.
 class ValidationNotEqualError < ValidationFailedError
   def initialize(expected, actual, io, src_path)
-    super("not equal, expected #{expected.inspect}, but got #{actual.inspect}", io, src_path)
+    if Stream.is_byte_array?(expected, actual)
+      super("not equal, expected [#{Stream.format_hex(expected)}], but got [#{Stream.format_hex(actual)}]", io, src_path)
+    else
+      super("not equal, expected #{expected.inspect}, but got #{actual.inspect}", io, src_path)
+    end
+
     @expected = expected
     @actual = actual
   end
