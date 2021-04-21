@@ -545,6 +545,17 @@ class Stream
   def self.is_byte_array?(*args)
     args.all? { |arg| arg.is_a?(String) and (arg.encoding == Encoding::ASCII_8BIT) }
   end
+
+  def self.inspect_values(*args)
+    reprs = args.map { |arg|
+      if Stream.is_byte_array?(arg)
+        "[#{Stream.format_hex(arg)}]"
+      else
+        arg.inspect
+      end
+    }
+    reprs.length == 1 ? reprs[0] : reprs
+  end
 end
 
 ##
@@ -583,11 +594,8 @@ end
 # "expected", but it turned out that it's not.
 class ValidationNotEqualError < ValidationFailedError
   def initialize(expected, actual, io, src_path)
-    if Stream.is_byte_array?(expected, actual)
-      super("not equal, expected [#{Stream.format_hex(expected)}], but got [#{Stream.format_hex(actual)}]", io, src_path)
-    else
-      super("not equal, expected #{expected.inspect}, but got #{actual.inspect}", io, src_path)
-    end
+    expected_repr, actual_repr = Stream.inspect_values(expected, actual)
+    super("not equal, expected #{expected_repr}, but got #{actual_repr}", io, src_path)
 
     @expected = expected
     @actual = actual
@@ -599,7 +607,8 @@ end
 # than or equal to "min", but it turned out that it's not.
 class ValidationLessThanError < ValidationFailedError
   def initialize(min, actual, io, src_path)
-    super("not in range, min #{min.inspect}, but got #{actual.inspect}", io, src_path)
+    min_repr, actual_repr = Stream.inspect_values(min, actual)
+    super("not in range, min #{min_repr}, but got #{actual_repr}", io, src_path)
     @min = min
     @actual = actual
   end
@@ -610,7 +619,8 @@ end
 # than or equal to "max", but it turned out that it's not.
 class ValidationGreaterThanError < ValidationFailedError
   def initialize(max, actual, io, src_path)
-    super("not in range, max #{max.inspect}, but got #{actual.inspect}", io, src_path)
+    max_repr, actual_repr = Stream.inspect_values(max, actual)
+    super("not in range, max #{max_repr}, but got #{actual_repr}", io, src_path)
     @max = max
     @actual = actual
   end
@@ -621,7 +631,8 @@ end
 # the given list, but it turned out that it's not.
 class ValidationNotAnyOfError < ValidationFailedError
   def initialize(actual, io, src_path)
-    super("not any of the list, got #{actual.inspect}", io, src_path)
+    actual_repr = Stream.inspect_values(actual)
+    super("not any of the list, got #{actual_repr}", io, src_path)
     @actual = actual
   end
 end
@@ -631,7 +642,8 @@ end
 # the expression, but it turned out that it doesn't.
 class ValidationExprError < ValidationFailedError
   def initialize(actual, io, src_path)
-    super("not matching the expression, got #{actual.inspect}", io, src_path)
+    actual_repr = Stream.inspect_values(actual)
+    super("not matching the expression, got #{actual_repr}", io, src_path)
     @actual = actual
   end
 end
