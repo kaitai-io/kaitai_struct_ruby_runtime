@@ -292,28 +292,29 @@ class Stream
   end
 
   def read_bits_int_be(n)
+    res = 0
+
     bits_needed = n - @bits_left
+    @bits_left = -bits_needed % 8
+
     if bits_needed > 0
       # 1 bit  => 1 byte
       # 8 bits => 1 byte
       # 9 bits => 2 bytes
-      bytes_needed = ((bits_needed - 1) / 8) + 1
+      bytes_needed = ((bits_needed - 1) / 8) + 1 # `ceil(bits_needed / 8)`
       buf = read_bytes(bytes_needed)
       buf.each_byte { |byte|
-        @bits <<= 8
-        @bits |= byte
-        @bits_left += 8
+        res = res << 8 | byte
       }
+
+      new_bits = res
+      res = res >> @bits_left | @bits << bits_needed
+      @bits = new_bits # will be masked at the end of the function
+    else
+      res = @bits >> -bits_needed # shift unneeded bits out
     end
 
-    # raw mask with required number of 1s, starting from lowest bit
-    mask = (1 << n) - 1
-    # shift @bits to align the highest bits with the mask & derive reading result
-    shift_bits = @bits_left - n
-    res = (@bits >> shift_bits) & mask
-    # clear top bits that we've just read => AND with 1s
-    @bits_left -= n
-    mask = (1 << @bits_left) - 1
+    mask = (1 << @bits_left) - 1 # `@bits_left` is in range 0..7
     @bits &= mask
 
     res
@@ -326,28 +327,34 @@ class Stream
   end
 
   def read_bits_int_le(n)
+    res = 0
     bits_needed = n - @bits_left
-    if bits_needed > 0
+
+    if bits_needed > 0 then
       # 1 bit  => 1 byte
       # 8 bits => 1 byte
       # 9 bits => 2 bytes
-      bytes_needed = ((bits_needed - 1) / 8) + 1
+      bytes_needed = ((bits_needed - 1) / 8) + 1 # `ceil(bits_needed / 8)`
       buf = read_bytes(bytes_needed)
+      i = 0
       buf.each_byte { |byte|
-        @bits |= (byte << @bits_left)
-        @bits_left += 8
+        res |= byte << (i * 8)
+        i += 1
       }
+
+      new_bits = res >> bits_needed
+      res = res << @bits_left | @bits
+      @bits = new_bits
+    else
+      res = @bits
+      @bits >>= n
     end
 
-    # raw mask with required number of 1s, starting from lowest bit
-    mask = (1 << n) - 1
-    # derive reading result
-    res = @bits & mask
-    # remove bottom bits that we've just read by shifting
-    @bits >>= n
-    @bits_left -= n
+    @bits_left = -bits_needed % 8
 
-    res
+    mask = (1 << n) - 1 # no problem with this in Ruby (arbitrary precision integers)
+    res &= mask
+    return res
   end
 
   # @!endgroup
