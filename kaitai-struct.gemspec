@@ -14,6 +14,11 @@ Gem::Specification.new { |s|
   s.homepage = 'http://kaitai.io'
   s.summary = 'Kaitai Struct: runtime library for Ruby'
   s.license = 'MIT'
+  s.metadata = {
+    'bug_tracker_uri' => 'https://github.com/kaitai-io/kaitai_struct_ruby_runtime/issues',
+    'homepage_uri' => s.homepage,
+    'source_code_uri' => 'https://github.com/kaitai-io/kaitai_struct_ruby_runtime'
+  }
   s.description = <<-EOF
 Kaitai Struct is a declarative language used for describe various binary data structures, laid out in files or in memory: i.e. binary file formats, network stream packet formats, etc.
 
@@ -25,7 +30,7 @@ EOF
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ['lib']
 
-  s.files = Dir['lib/**/*.rb']
+  s.files = Dir['lib/**/*.rb'] + ['LICENSE', 'README.md']
   s.executables = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
   s.test_files = s.files.grep(%r{^(test|spec|features)/})
 }
