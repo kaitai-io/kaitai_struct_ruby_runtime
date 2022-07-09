@@ -20,7 +20,7 @@ Further reading:
 
 If your project uses Bundler, just include the line
 
-```bash
+```
 gem 'kaitai-struct'
 ```
 
@@ -30,7 +30,7 @@ in your project's `Gemfile`.
 
 If you have a RubyGems package manager installed, you can use command
 
-```bash
+```
 gem install kaitai-struct
 ```
 
