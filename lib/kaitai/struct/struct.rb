@@ -517,6 +517,20 @@ class Stream
   # @!endgroup
 
   ##
+  # Reserves next n bytes from current stream as a
+  # Kaitai::Struct::Stream substream. Substream has its own pointer
+  # and addressing in the range of [0, n) bytes. This stream's pointer
+  # is advanced to the position right after this substream.
+  # @param n [Fixnum] number of bytes to reserve for a substream
+  # @return [Stream] substream covering n bytes from the current
+  #   position
+  def substream(n)
+    sub = Stream.new(SubIO.new(@_io, @_io.pos, n))
+    @_io.seek(@_io.pos + n)
+    sub
+  end
+
+  ##
   # Resolves value using enum: if the value is not found in the map,
   # we'll just use literal value per se.
   def self.resolve_enum(enum_map, value)
@@ -598,6 +612,23 @@ class SubIO
     raise Errno::EINVAL.new("Negative position requested") if amount < 0
     @pos = amount.to_int
     return 0
+  end
+
+  def getc
+    raise IOError.new("closed stream") if @closed
+
+    return nil if @pos >= @parent_len
+
+    # remember position in parent IO
+    old_pos = @parent_io.pos
+    @parent_io.seek(@parent_start + @pos)
+    res = @parent_io.getc
+    @pos += 1
+
+    # restore position in parent IO
+    @parent_io.seek(old_pos)
+
+    res
   end
 
   def read(len = nil)
