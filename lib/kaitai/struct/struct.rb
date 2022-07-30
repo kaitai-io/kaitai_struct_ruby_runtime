@@ -585,16 +585,28 @@ end
 # limited set of bytes starting from specified offset and spanning up to
 # specified length.
 class SubIO
+  ##
+  # Parent IO object that this substream is projecting data from.
   attr_reader :parent_io
-  attr_reader :parent_offset
-  attr_reader :parent_len
+
+  ##
+  # Offset of start of substream in coordinates of parent stream. In
+  # coordinates of substream itself start will be always 0.
+  attr_reader :parent_start
+
+  ##
+  # Size of substream in bytes.
+  attr_reader :size
+
+  ##
+  # Current position in a substream. Independent from a position in a
+  # parent IO.
   attr_reader :pos
 
-  def initialize(parent_io, parent_start, parent_len)
+  def initialize(parent_io, parent_start, size)
     @parent_io = parent_io
     @parent_start = parent_start
-    @parent_len = parent_len
-    @parent_end = @parent_start + @parent_len
+    @size = size
     @pos = 0
     @closed = false
   end
@@ -602,7 +614,7 @@ class SubIO
   def eof?
     raise IOError.new("closed stream") if @closed
 
-    @pos >= @parent_len
+    @pos >= @size
   end
 
   def seek(amount, whence = IO::SEEK_SET)
@@ -614,12 +626,10 @@ class SubIO
     return 0
   end
 
-  def size; @parent_len; end
-
   def getc
     raise IOError.new("closed stream") if @closed
 
-    return nil if @pos >= @parent_len
+    return nil if @pos >= @size
 
     # remember position in parent IO
     old_pos = @parent_io.pos
@@ -641,14 +651,14 @@ class SubIO
 
     # read until the end of substream
     if len.nil?
-      len = @parent_len - @pos
+      len = @size - @pos
       return "" if len < 0
     else
       # special case to requesting exactly 0 bytes
       return "" if len == 0
 
       # cap intent to read if going beyond substream boundary
-      left = @parent_len - @pos
+      left = @size - @pos
 
       # if actually requested reading and we're beyond the boundary, return nil
       return nil if left <= 0
