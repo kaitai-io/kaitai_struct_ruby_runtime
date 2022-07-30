@@ -83,7 +83,8 @@ class Stream
   # was expected to appear, but actual data read was different.
   class UnexpectedDataError < Exception
     def initialize(actual, expected)
-      super("Unexpected fixed contents: got #{Stream.format_hex(actual)}, was waiting for #{Stream.format_hex(expected)}")
+      super("Unexpected fixed contents: got #{Stream.format_hex(actual)}, " \
+            "was waiting for #{Stream.format_hex(expected)}")
       @actual = actual
       @expected = expected
     end

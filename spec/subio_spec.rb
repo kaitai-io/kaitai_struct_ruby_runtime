@@ -13,7 +13,7 @@ RSpec.describe Kaitai::Struct::SubIO do
       it "can seek to 0" do
         expect(@normal_io.seek(0)).to eq(0)
         expect(@io.seek(0)).to eq(0)
-        
+
         expect(@normal_io.pos).to eq(0)
         expect(@io.pos).to eq(0)
       end
@@ -21,7 +21,7 @@ RSpec.describe Kaitai::Struct::SubIO do
       it "can seek to 2" do
         expect(@normal_io.seek(2)).to eq(0)
         expect(@io.seek(2)).to eq(0)
-        
+
         expect(@normal_io.pos).to eq(2)
         expect(@io.pos).to eq(2)
       end
@@ -29,7 +29,7 @@ RSpec.describe Kaitai::Struct::SubIO do
       it "can seek to 10 (beyond EOF)" do
         expect(@normal_io.seek(10)).to eq(0)
         expect(@io.seek(10)).to eq(0)
-        
+
         expect(@normal_io.pos).to eq(10)
         expect(@io.pos).to eq(10)
       end
@@ -180,13 +180,13 @@ RSpec.describe Kaitai::Struct::SubIO do
         expect(@normal_io.read(10)).to eq("34")
         expect(@io.read(10)).to eq("34")
       end
-      
+
       context("after seek to EOF") do
         before(:each) do
           @normal_io.seek(3)
           @io.seek(3)
         end
-        
+
         it "reads nil when asked to read(1)" do
           expect(@normal_io.read(1)).to eq(nil)
           expect(@io.read(1)).to eq(nil)
@@ -201,14 +201,14 @@ RSpec.describe Kaitai::Struct::SubIO do
           expect(@normal_io.read(0)).to eq("")
           expect(@io.read(0)).to eq("")
         end
-      end 
+      end
 
       context("after seek beyond EOF") do
         before(:each) do
           @normal_io.seek(10)
           @io.seek(10)
         end
-        
+
         it "reads nil when asked to read(1)" do
           expect(@normal_io.read(1)).to eq(nil)
           expect(@io.read(1)).to eq(nil)
