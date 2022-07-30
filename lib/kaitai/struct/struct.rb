@@ -614,6 +614,8 @@ class SubIO
     return 0
   end
 
+  def size; @parent_len; end
+
   def getc
     raise IOError.new("closed stream") if @closed
 
