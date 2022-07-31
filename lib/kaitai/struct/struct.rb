@@ -93,15 +93,16 @@ class Stream
 
   ##
   # Constructs new Kaitai Stream object.
-  # @param arg [String, IO] if String, it will be used as byte array to read data from;
-  #   if IO, if will be used literally as source of data
+  # @param arg [String, IO, StringIO, SubIO] if String, it will be used as byte
+  #   array to read data from; if IO (or StringIO, or SubIO), if will be used literally
+  #   as the source of data
   def initialize(arg)
     if arg.is_a?(String)
       @_io = StringIO.new(arg)
-    elsif arg.is_a?(IO) or arg.is_a?(SubIO)
+    elsif arg.is_a?(IO) or arg.is_a?(StringIO) or arg.is_a?(SubIO)
       @_io = arg
     else
-      raise TypeError.new('can be initialized with IO, SubIO or String only')
+      raise TypeError.new('can be initialized with IO, StringIO, SubIO or String only')
     end
     align_to_byte
   end
