@@ -16,6 +16,7 @@ Gem::Specification.new { |s|
   s.license = 'MIT'
   s.metadata = {
     'bug_tracker_uri' => 'https://github.com/kaitai-io/kaitai_struct_ruby_runtime/issues',
+    'documentation_uri' => 'https://www.rubydoc.info/gems/kaitai-struct',
     'homepage_uri' => s.homepage,
     'source_code_uri' => 'https://github.com/kaitai-io/kaitai_struct_ruby_runtime'
   }
