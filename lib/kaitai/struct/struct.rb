@@ -12,7 +12,7 @@ VERSION = '0.11'
 # structure in {#_root} and provides a few helper methods.
 class Struct
 
-  def initialize(_io, _parent = nil, _root = self)
+  def initialize(_io, _parent = nil, _root = nil)
     @_io = _io
     @_parent = _parent
     @_root = _root
