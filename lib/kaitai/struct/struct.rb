@@ -435,13 +435,12 @@ class Stream
   end
 
   def self.bytes_terminate(bytes, term, include_term)
-    new_len = 0
-    max_len = bytes.length
-    while bytes.getbyte(new_len) != term and new_len < max_len
-      new_len += 1
+    term_index = bytes.index(term.chr)
+    if term_index.nil?
+      bytes.dup
+    else
+      bytes[0, term_index + (include_term ? 1 : 0)]
     end
-    new_len += 1 if include_term and new_len < max_len
-    bytes[0, new_len]
   end
 
   # @!endgroup
