@@ -388,17 +388,18 @@ class Stream
   end
 
   def read_bytes_term(term, include_term, consume_term, eos_error)
+    term_byte = term.chr
     r = ''
     loop {
-      if @_io.eof?
+      c = @_io.getc
+      if c.nil?
         if eos_error
           raise EOFError.new("end of stream reached, but no terminator #{term} found")
-        else
-          return r
         end
+
+        return r
       end
-      c = @_io.getc
-      if c.ord == term
+      if c == term_byte
         r << c if include_term
         @_io.seek(@_io.pos - 1) unless consume_term
         return r
