@@ -408,6 +408,28 @@ class Stream
     }
   end
 
+  def read_bytes_term_multi(term, include_term, consume_term, eos_error)
+    unit_size = term.bytesize
+    r = ''
+    loop {
+      c = @_io.read(unit_size) || ''
+      if c.bytesize < unit_size
+        if eos_error
+          raise EOFError.new("end of stream reached, but no terminator #{term} found")
+        end
+
+        r << c
+        return r
+      end
+      if c == term
+        r << c if include_term
+        @_io.seek(@_io.pos - unit_size) unless consume_term
+        return r
+      end
+      r << c
+    }
+  end
+
   ##
   # Unused since Kaitai Struct Compiler v0.9+ - compatibility with
   # older versions.
@@ -442,6 +464,21 @@ class Stream
     else
       bytes[0, term_index + (include_term ? 1 : 0)]
     end
+  end
+
+  def self.bytes_terminate_multi(bytes, term, include_term)
+    unit_size = term.bytesize
+    search_index = bytes.index(term)
+    loop {
+      if search_index.nil?
+        return bytes.dup
+      end
+      mod = search_index % unit_size
+      if mod == 0
+        return bytes[0, search_index + (include_term ? unit_size : 0)]
+      end
+      search_index = bytes.index(term, search_index + (unit_size - mod))
+    }
   end
 
   # @!endgroup
