@@ -802,6 +802,17 @@ class ValidationNotAnyOfError < ValidationFailedError
 end
 
 ##
+# Signals validation failure: we required "actual" value to be in
+# the enum, but it turned out that it's not.
+class ValidationNotInEnumError < ValidationFailedError
+  def initialize(actual, io, src_path)
+    actual_repr = Stream.inspect_values(actual)
+    super("not in the enum, got #{actual_repr}", io, src_path)
+    @actual = actual
+  end
+end
+
+##
 # Signals validation failure: we required "actual" value to match
 # the expression, but it turned out that it doesn't.
 class ValidationExprError < ValidationFailedError
