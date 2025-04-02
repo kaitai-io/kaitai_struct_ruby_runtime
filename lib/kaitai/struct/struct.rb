@@ -683,11 +683,13 @@ class SubIO
     # remember position in parent IO
     old_pos = @parent_io.pos
     @parent_io.seek(@parent_start + @pos)
-    res = @parent_io.getc
-    @pos += 1
-
-    # restore position in parent IO
-    @parent_io.seek(old_pos)
+    begin
+      res = @parent_io.getc
+      @pos += 1
+    ensure
+      # restore position in parent IO
+      @parent_io.seek(old_pos)
+    end
 
     res
   end

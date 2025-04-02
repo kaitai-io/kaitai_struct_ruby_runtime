@@ -225,5 +225,13 @@ RSpec.describe Kaitai::Struct::SubIO do
         end
       end
     end
+
+    describe "#getc" do
+      it 'restores parent pos if parent #getc fails' do
+        @io.parent_io.close_read
+        expect { @io.getc }.to raise_error(IOError)
+        expect(@io.parent_io.pos).to eq(0)
+      end
+    end
   end
 end
