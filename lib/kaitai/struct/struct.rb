@@ -370,8 +370,17 @@ class Stream
   # @raise [EOFError] if there were less bytes than requested
   #   available in the stream
   def read_bytes(n)
+    if n.nil?
+      # This `read(0)` call is only used to raise `IOError: not opened for reading`
+      # if the stream is closed. This ensures identical behavior to the `substream`
+      # method.
+      @_io.read(0)
+      raise TypeError.new('no implicit conversion from nil to integer')
+    end
+
     r = @_io.read(n)
     rl = r ? r.bytesize : 0
+    n = n.to_int
     if rl < n
       begin
         @_io.seek(@_io.pos - rl)
@@ -569,6 +578,8 @@ class Stream
   #   position
   def substream(n)
     raise IOError.new('not opened for reading') if @_io.closed?
+
+    n = Stream.num2long(n)
     raise ArgumentError.new("negative length #{n} given") if n < 0
 
     rl = [0, @_io.size - @_io.pos].max
@@ -595,6 +606,29 @@ class Stream
 
   def to_signed(x, mask)
     (x & ~mask) - (x & mask)
+  end
+
+  ##
+  # Internal implementation helper. Do not use from outside the
+  # library, it can be removed at any time.
+  #
+  # This method reproduces the behavior of the +rb_num2long+ function:
+  # https://github.com/ruby/ruby/blob/d2930f8e7a5db8a7337fa43370940381b420cc3e/numeric.c#L3195-L3221
+  def self.num2long(val)
+    val_as_int = val.to_int
+  rescue NoMethodError
+    raise TypeError.new('no implicit conversion from nil to integer') if val.nil?
+
+    val_as_human =
+      case val
+      when true, false
+        val.to_s
+      else
+        val.class
+      end
+    raise TypeError.new("no implicit conversion of #{val_as_human} into Integer")
+  else
+    val_as_int
   end
 
   def self.format_hex(bytes)
@@ -668,8 +702,9 @@ class SubIO
 
   def seek(offset, whence = IO::SEEK_SET)
     raise ArgumentError.new('only IO::SEEK_SET is supported by SubIO#seek') unless whence == IO::SEEK_SET
+
+    offset = Stream.num2long(offset)
     raise IOError.new('closed stream') if @closed
-    raise TypeError.new("Need an integer argument for amount in SubIO::seek") unless offset.respond_to?(:to_int)
     raise Errno::EINVAL if offset < 0
     @pos = offset.to_int
     return 0
@@ -701,7 +736,8 @@ class SubIO
     if len.nil?
       len = @size - @pos
       return BYTE_STRING_EMPTY.dup if len <= 0
-    else
+    elsif len.respond_to?(:to_int)
+      len = len.to_int
       # special case for requesting exactly 0 bytes
       return BYTE_STRING_EMPTY.dup if len == 0
 

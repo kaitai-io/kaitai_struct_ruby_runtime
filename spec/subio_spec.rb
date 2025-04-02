@@ -134,6 +134,11 @@ RSpec.describe Kaitai::Struct::SubIO do
         expect(@io.read(2)).to eq("23")
       end
 
+      it "reads 23 when asked to read 2.7" do
+        expect(@normal_io.read(2.7)).to eq("23")
+        expect(@io.read(2.7)).to eq("23")
+      end
+
       it "reads 234 when asked to read 3" do
         expect(@normal_io.read(3)).to eq("234")
         expect(@io.read(3)).to eq("234")

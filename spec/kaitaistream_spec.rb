@@ -97,7 +97,16 @@ RSpec.describe Kaitai::Struct::Stream do
         len = range(0, 8)
         s = array(len) { range(0, 255) }.pack('C*')
         ops = array(10) do
-          sub_len = range(-2, len + 1)
+          sub_len = branch(
+            [:range, -2, len + 1],
+            [:float, :normal, { center: 1, scale: 4 }],
+            :boolean,
+            [:string, :digit],
+            [:literal, [1, 2]],
+            [:literal, nil],
+            [:literal, Complex(2, 0)],
+            [:literal, Complex(2, 1)]
+          )
           options = %i[enter_subio read seek].map { |x| [x, [sub_len]] }
           options.concat(%i[exit_subio eof? pos size getc close_io].map { |x| [x, []] })
 
