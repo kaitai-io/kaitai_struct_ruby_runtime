@@ -568,6 +568,12 @@ class Stream
   # @return [Stream] substream covering n bytes from the current
   #   position
   def substream(n)
+    raise IOError.new('not opened for reading') if @_io.closed?
+    raise ArgumentError.new("negative length #{n} given") if n < 0
+
+    rl = [0, @_io.size - @_io.pos].max
+    raise EOFError.new("attempted to read #{n} bytes, got only #{rl}") if rl < n
+
     sub = Stream.new(SubIO.new(@_io, @_io.pos, n))
     @_io.seek(@_io.pos + n)
     sub
@@ -655,22 +661,22 @@ class SubIO
   end
 
   def eof?
-    raise IOError.new("closed stream") if @closed
+    raise IOError.new('not opened for reading') if @closed
 
     @pos >= @size
   end
 
-  def seek(amount, whence = IO::SEEK_SET)
-    raise IOError.new("closed stream") if @closed
-    raise ArgumentError.new("Anything but IO::SEEK_SET is not supported in SubIO::seek") if whence != IO::SEEK_SET
-    raise TypeError.new("Need an integer argument for amount in SubIO::seek") unless amount.respond_to?(:to_int)
-    raise Errno::EINVAL.new("Negative position requested") if amount < 0
-    @pos = amount.to_int
+  def seek(offset, whence = IO::SEEK_SET)
+    raise ArgumentError.new('only IO::SEEK_SET is supported by SubIO#seek') unless whence == IO::SEEK_SET
+    raise IOError.new('closed stream') if @closed
+    raise TypeError.new("Need an integer argument for amount in SubIO::seek") unless offset.respond_to?(:to_int)
+    raise Errno::EINVAL if offset < 0
+    @pos = offset.to_int
     return 0
   end
 
   def getc
-    raise IOError.new("closed stream") if @closed
+    raise IOError.new('not opened for reading') if @closed
 
     return nil if @pos >= @size
 
@@ -687,43 +693,55 @@ class SubIO
   end
 
   def read(len = nil)
-    raise IOError.new("closed stream") if @closed
-
-    # remember position in parent IO
-    old_pos = @parent_io.pos
+    raise IOError.new('not opened for reading') if @closed
 
     # read until the end of substream
     if len.nil?
       len = @size - @pos
-      return "" if len < 0
+      return BYTE_STRING_EMPTY.dup if len <= 0
     else
-      # special case to requesting exactly 0 bytes
-      return "" if len == 0
+      # special case for requesting exactly 0 bytes
+      return BYTE_STRING_EMPTY.dup if len == 0
 
-      # cap intent to read if going beyond substream boundary
-      left = @size - @pos
+      if len > 0
+        # cap intent to read if going beyond substream boundary
+        left = @size - @pos
 
-      # if actually requested reading and we're beyond the boundary, return nil
-      return nil if left <= 0
+        # if actually requested reading and we're beyond the boundary, return nil
+        return nil if left <= 0
 
-      # otherwise, still return something, but less than requested
-      len = left if len > left
+        # otherwise, still return something, but less than requested
+        len = left if len > left
+      end
     end
 
-    @parent_io.seek(@parent_start + @pos)
-    res = @parent_io.read(len)
-    read_len = res.size
-    @pos += read_len
+    # remember position in parent IO
+    old_pos = @parent_io.pos
 
-    # restore position in parent IO
-    @parent_io.seek(old_pos)
+    @parent_io.seek(@parent_start + @pos)
+    begin
+      res = @parent_io.read(len)
+      read_len = res.bytesize
+      @pos += read_len
+    ensure
+      # restore position in parent IO
+      @parent_io.seek(old_pos)
+    end
 
     res
   end
 
   def close
     @closed = true
+    nil
   end
+
+  def closed?
+    @closed
+  end
+
+  BYTE_STRING_EMPTY = ''.force_encoding(Encoding::ASCII_8BIT).freeze
+  private_constant :BYTE_STRING_EMPTY
 end
 
 ##
