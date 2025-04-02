@@ -371,12 +371,16 @@ class Stream
   #   available in the stream
   def read_bytes(n)
     r = @_io.read(n)
-    if r
-      rl = r.bytesize
-    else
-      rl = 0
+    rl = r ? r.bytesize : 0
+    if rl < n
+      begin
+        @_io.seek(@_io.pos - rl)
+      rescue Errno::ESPIPE
+        # We have a non-seekable stream, so we can't go back to the
+        # previous position - that's fine.
+      end
+      raise EOFError.new("attempted to read #{n} bytes, got only #{rl}")
     end
-    raise EOFError.new("attempted to read #{n} bytes, got only #{rl}") if rl < n
     r
   end
 

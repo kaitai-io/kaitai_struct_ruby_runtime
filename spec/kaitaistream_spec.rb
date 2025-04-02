@@ -58,6 +58,8 @@ RSpec.describe Kaitai::Struct::Stream do
       # Check that we can't seek in a socket IO
       expect { stream.seek(2) }.to raise_error(Errno::ESPIPE)
 
+      expect { stream.read_bytes(5) }.to raise_error(EOFError, 'attempted to read 5 bytes, got only 4')
+
       c2s_socket.close
     end
 
