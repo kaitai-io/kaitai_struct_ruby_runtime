@@ -579,7 +579,7 @@ class Stream
   def substream(n)
     raise IOError.new('not opened for reading') if @_io.closed?
 
-    n = Stream.num2long(n)
+    n = Internal.num2long(n)
     raise ArgumentError.new("negative length #{n} given") if n < 0
 
     rl = [0, @_io.size - @_io.pos].max
@@ -606,29 +606,6 @@ class Stream
 
   def to_signed(x, mask)
     (x & ~mask) - (x & mask)
-  end
-
-  ##
-  # Internal implementation helper. Do not use from outside the
-  # library, it can be removed at any time.
-  #
-  # This method reproduces the behavior of the +rb_num2long+ function:
-  # https://github.com/ruby/ruby/blob/d2930f8e7a5db8a7337fa43370940381b420cc3e/numeric.c#L3195-L3221
-  def self.num2long(val)
-    val_as_int = val.to_int
-  rescue NoMethodError
-    raise TypeError.new('no implicit conversion from nil to integer') if val.nil?
-
-    val_as_human =
-      case val
-      when true, false
-        val.to_s
-      else
-        val.class
-      end
-    raise TypeError.new("no implicit conversion of #{val_as_human} into Integer")
-  else
-    val_as_int
   end
 
   def self.format_hex(bytes)
@@ -703,7 +680,7 @@ class SubIO
   def seek(offset, whence = IO::SEEK_SET)
     raise ArgumentError.new('only IO::SEEK_SET is supported by SubIO#seek') unless whence == IO::SEEK_SET
 
-    offset = Stream.num2long(offset)
+    offset = Internal.num2long(offset)
     raise IOError.new('closed stream') if @closed
     raise Errno::EINVAL if offset < 0
     @pos = offset.to_int
@@ -882,6 +859,32 @@ class ValidationExprError < ValidationFailedError
     @actual = actual
   end
 end
+
+##
+# \Internal implementation helpers.
+module Internal
+  ##
+  # This method reproduces the behavior of the +rb_num2long+ function:
+  # https://github.com/ruby/ruby/blob/d2930f8e7a5db8a7337fa43370940381b420cc3e/numeric.c#L3195-L3221
+  def self.num2long(val)
+    val_as_int = val.to_int
+  rescue NoMethodError
+    raise TypeError.new('no implicit conversion from nil to integer') if val.nil?
+
+    val_as_human =
+      case val
+      when true, false
+        val.to_s
+      else
+        val.class
+      end
+    raise TypeError.new("no implicit conversion of #{val_as_human} into Integer")
+  else
+    val_as_int
+  end
+end
+
+private_constant :Internal
 
 end
 end
