@@ -370,13 +370,26 @@ class Stream
   # @raise [EOFError] if there were less bytes than requested
   #   available in the stream
   def read_bytes(n)
-    r = @_io.read(n)
-    if r
-      rl = r.bytesize
-    else
-      rl = 0
+    if n.nil?
+      # This `read(0)` call is only used to raise `IOError: not opened for reading`
+      # if the stream is closed. This ensures identical behavior to the `substream`
+      # method.
+      @_io.read(0)
+      raise TypeError.new('no implicit conversion from nil to integer')
     end
-    raise EOFError.new("attempted to read #{n} bytes, got only #{rl}") if rl < n
+
+    r = @_io.read(n)
+    rl = r ? r.bytesize : 0
+    n = n.to_int
+    if rl < n
+      begin
+        @_io.seek(@_io.pos - rl)
+      rescue Errno::ESPIPE
+        # We have a non-seekable stream, so we can't go back to the
+        # previous position - that's fine.
+      end
+      raise EOFError.new("attempted to read #{n} bytes, got only #{rl}")
+    end
     r
   end
 
@@ -564,6 +577,14 @@ class Stream
   # @return [Stream] substream covering n bytes from the current
   #   position
   def substream(n)
+    raise IOError.new('not opened for reading') if @_io.closed?
+
+    n = Internal.num2long(n)
+    raise ArgumentError.new("negative length #{n} given") if n < 0
+
+    rl = [0, @_io.size - @_io.pos].max
+    raise EOFError.new("attempted to read #{n} bytes, got only #{rl}") if rl < n
+
     sub = Stream.new(SubIO.new(@_io, @_io.pos, n))
     @_io.seek(@_io.pos + n)
     sub
@@ -651,75 +672,91 @@ class SubIO
   end
 
   def eof?
-    raise IOError.new("closed stream") if @closed
+    raise IOError.new('not opened for reading') if @closed
 
     @pos >= @size
   end
 
-  def seek(amount, whence = IO::SEEK_SET)
-    raise IOError.new("closed stream") if @closed
-    raise ArgumentError.new("Anything but IO::SEEK_SET is not supported in SubIO::seek") if whence != IO::SEEK_SET
-    raise TypeError.new("Need an integer argument for amount in SubIO::seek") unless amount.respond_to?(:to_int)
-    raise Errno::EINVAL.new("Negative position requested") if amount < 0
-    @pos = amount.to_int
+  def seek(offset, whence = IO::SEEK_SET)
+    raise ArgumentError.new('only IO::SEEK_SET is supported by SubIO#seek') unless whence == IO::SEEK_SET
+
+    offset = Internal.num2long(offset)
+    raise IOError.new('closed stream') if @closed
+    raise Errno::EINVAL if offset < 0
+    @pos = offset.to_int
     return 0
   end
 
   def getc
-    raise IOError.new("closed stream") if @closed
+    raise IOError.new('not opened for reading') if @closed
 
     return nil if @pos >= @size
 
     # remember position in parent IO
     old_pos = @parent_io.pos
     @parent_io.seek(@parent_start + @pos)
-    res = @parent_io.getc
-    @pos += 1
-
-    # restore position in parent IO
-    @parent_io.seek(old_pos)
+    begin
+      res = @parent_io.getc
+      @pos += 1
+    ensure
+      # restore position in parent IO
+      @parent_io.seek(old_pos)
+    end
 
     res
   end
 
   def read(len = nil)
-    raise IOError.new("closed stream") if @closed
-
-    # remember position in parent IO
-    old_pos = @parent_io.pos
+    raise IOError.new('not opened for reading') if @closed
 
     # read until the end of substream
     if len.nil?
       len = @size - @pos
-      return "" if len < 0
-    else
-      # special case to requesting exactly 0 bytes
-      return "" if len == 0
+      return BYTE_STRING_EMPTY.dup if len <= 0
+    elsif len.respond_to?(:to_int)
+      len = len.to_int
+      # special case for requesting exactly 0 bytes
+      return BYTE_STRING_EMPTY.dup if len == 0
 
-      # cap intent to read if going beyond substream boundary
-      left = @size - @pos
+      if len > 0
+        # cap intent to read if going beyond substream boundary
+        left = @size - @pos
 
-      # if actually requested reading and we're beyond the boundary, return nil
-      return nil if left <= 0
+        # if actually requested reading and we're beyond the boundary, return nil
+        return nil if left <= 0
 
-      # otherwise, still return something, but less than requested
-      len = left if len > left
+        # otherwise, still return something, but less than requested
+        len = left if len > left
+      end
     end
 
-    @parent_io.seek(@parent_start + @pos)
-    res = @parent_io.read(len)
-    read_len = res.size
-    @pos += read_len
+    # remember position in parent IO
+    old_pos = @parent_io.pos
 
-    # restore position in parent IO
-    @parent_io.seek(old_pos)
+    @parent_io.seek(@parent_start + @pos)
+    begin
+      res = @parent_io.read(len)
+      read_len = res.bytesize
+      @pos += read_len
+    ensure
+      # restore position in parent IO
+      @parent_io.seek(old_pos)
+    end
 
     res
   end
 
   def close
     @closed = true
+    nil
   end
+
+  def closed?
+    @closed
+  end
+
+  BYTE_STRING_EMPTY = ''.force_encoding(Encoding::ASCII_8BIT).freeze
+  private_constant :BYTE_STRING_EMPTY
 end
 
 ##
@@ -822,6 +859,32 @@ class ValidationExprError < ValidationFailedError
     @actual = actual
   end
 end
+
+##
+# \Internal implementation helpers.
+module Internal
+  ##
+  # This method reproduces the behavior of the +rb_num2long+ function:
+  # https://github.com/ruby/ruby/blob/d2930f8e7a5db8a7337fa43370940381b420cc3e/numeric.c#L3195-L3221
+  def self.num2long(val)
+    val_as_int = val.to_int
+  rescue NoMethodError
+    raise TypeError.new('no implicit conversion from nil to integer') if val.nil?
+
+    val_as_human =
+      case val
+      when true, false
+        val.to_s
+      else
+        val.class
+      end
+    raise TypeError.new("no implicit conversion of #{val_as_human} into Integer")
+  else
+    val_as_int
+  end
+end
+
+private_constant :Internal
 
 end
 end
