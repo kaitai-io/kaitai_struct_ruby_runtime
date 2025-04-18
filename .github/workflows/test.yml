@@ -34,4 +34,4 @@ jobs:
       - name: Run RuboCop - everything
         run: bundle exec rubocop --color
         continue-on-error: true
-        if: ${{ contains(fromJSON('["success", "failure"]'), steps.rubocop-warnings.conclusion) }}
+        if: ${{ !cancelled() && steps.rubocop-warnings.conclusion != 'skipped' }}
