@@ -28,5 +28,10 @@ jobs:
         with:
           ruby-version: '3.4'
           bundler-cache: true
-      - name: Run RuboCop
-        run: bundle exec rubocop --color || true
+      - name: Run RuboCop - warnings
+        id: rubocop-warnings
+        run: bundle exec rubocop --color --fail-level warning --display-only-fail-level-offenses
+      - name: Run RuboCop - everything
+        run: bundle exec rubocop --color
+        continue-on-error: true
+        if: ${{ contains(fromJSON('["success", "failure"]'), steps.rubocop-warnings.conclusion) }}
