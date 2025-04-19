@@ -11,7 +11,7 @@ Gem::Specification.new { |s|
   s.authors = ['Mikhail Yakshin']
   s.email = 'greycat@kaitai.io'
 
-  s.homepage = 'http://kaitai.io'
+  s.homepage = 'https://kaitai.io/'
   s.summary = 'Kaitai Struct: runtime library for Ruby'
   s.license = 'MIT'
   s.metadata = {
