@@ -30,10 +30,10 @@ jobs:
         with:
           ruby-version: '3.4'
           bundler-cache: true
-      - name: Run RuboCop - warnings
+      - name: Run RuboCop - only warnings and errors
         id: rubocop-warnings
         run: bundle exec rubocop --color --fail-level warning --display-only-fail-level-offenses
-      - name: Run RuboCop - everything
+      - name: Run RuboCop - all offenses
         run: bundle exec rubocop --color
         continue-on-error: true
         if: ${{ !cancelled() && steps.rubocop-warnings.conclusion != 'skipped' }}
