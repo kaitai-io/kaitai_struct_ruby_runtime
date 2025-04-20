@@ -107,8 +107,10 @@ RSpec.describe Kaitai::Struct::Stream do
             [:literal, Complex(2, 0)],
             [:literal, Complex(2, 1)]
           )
-          options = %i[enter_subio read seek].map { |x| [x, [sub_len]] }
-          options.concat(%i[exit_subio eof? pos size getc close_io].map { |x| [x, []] })
+          # Since Ruby 2.0, we could use `%i[...]` here instead, but at the time
+          # of writing we still support Ruby 1.9.
+          options = [:enter_subio, :read, :seek].map { |x| [x, [sub_len]] }
+          options.concat([:exit_subio, :eof?, :pos, :size, :getc, :close_io].map { |x| [x, []] })
 
           choose(*options)
         end
