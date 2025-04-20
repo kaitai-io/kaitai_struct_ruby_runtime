@@ -9,7 +9,6 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -17,6 +16,7 @@ jobs:
           - '3.4'
           - '2.4'
           - '1.9'
+    runs-on: ${{ matrix.ruby-version == '1.9' && 'ubuntu-22.04' || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
