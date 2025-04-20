@@ -118,7 +118,11 @@ class Stream
   ##
   # Closes underlying IO object.
   def close
-    @_io.close
+    # NOTE: `unless @_io.closed?` is only needed in Ruby 2.2 and below. Ruby 2.3
+    # and later versions no longer raise `IOError: closed stream` when
+    # `StringIO#close` is called a second time, see
+    # https://github.com/ruby/ruby/commit/2e02f2dfd2dab936e7cd9a68d46bd910c5d184e5
+    @_io.close unless @_io.closed?
   end
 
   # @!group Stream positioning

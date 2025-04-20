@@ -1,0 +1,46 @@
+name: Ruby
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: {}
+
+jobs:
+  test:
+    name: Test
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version:
+          - '3.4'
+          - '2.4'
+          - '1.9'
+    runs-on: ${{ matrix.ruby-version == '1.9' && 'ubuntu-22.04' || 'ubuntu-24.04' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true # runs `bundle install` and caches installed gems automatically
+      - name: Run tests
+        run: bundle exec rspec --force-color
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      - name: Run RuboCop - only warnings and errors
+        id: rubocop-warnings
+        run: bundle exec rubocop --color --fail-level warning --display-only-fail-level-offenses
+      - name: Run RuboCop - all offenses
+        run: bundle exec rubocop --color
+        continue-on-error: true
+        if: ${{ !cancelled() && steps.rubocop-warnings.conclusion != 'skipped' }}

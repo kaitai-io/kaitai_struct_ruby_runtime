@@ -7,6 +7,9 @@ require 'rspec' # normally not needed, but RubyMine doesn't autocomplete RSpec m
 require 'rantly'
 require 'rantly/rspec_extensions'
 
+# `.dup` is needed in Ruby 1.9, otherwise `RuntimeError: can't modify frozen String` occurs
+IS_RUBY_1_9 = Gem::Version.new(RUBY_VERSION.dup) < Gem::Version.new('2.0.0')
+
 RSpec.describe Kaitai::Struct::Stream do
   before(:all) do
     @old_wd = Dir::getwd
@@ -107,8 +110,10 @@ RSpec.describe Kaitai::Struct::Stream do
             [:literal, Complex(2, 0)],
             [:literal, Complex(2, 1)]
           )
-          options = %i[enter_subio read seek].map { |x| [x, [sub_len]] }
-          options.concat(%i[exit_subio eof? pos size getc close_io].map { |x| [x, []] })
+          # Since Ruby 2.0, we could use `%i[...]` here instead, but at the time
+          # of writing we still support Ruby 1.9.
+          options = [:enter_subio, :read, :seek].map { |x| [x, [sub_len]] }
+          options.concat([:exit_subio, :eof?, :pos, :size, :getc, :close_io].map { |x| [x, []] })
 
           choose(*options)
         end
@@ -183,9 +188,16 @@ RSpec.describe Kaitai::Struct::Stream do
     def call_io_method(method_new, op_args, old_io, new_io, method_old = method_new)
       old_res = old_io.public_send(method_old, *op_args)
     rescue StandardError => old_err
+      expected_msg = old_err.message
+      msg_correction_needed =
+        IS_RUBY_1_9 &&
+        (method_new == :substream || (method_new == :seek && new_io.is_a?(Kaitai::Struct::SubIO))) &&
+        old_err.is_a?(TypeError) &&
+        expected_msg =~ /^can't convert (.*)/
+      expected_msg = "no implicit conversion of #{Regexp.last_match(1)}" if msg_correction_needed
       expect do
         new_io.public_send(method_new, *op_args)
-      end.to raise_error(old_err.class, old_err.message)
+      end.to raise_error(old_err.class, expected_msg)
       [:fail, old_err]
     else
       new_res = new_io.public_send(method_new, *op_args)
