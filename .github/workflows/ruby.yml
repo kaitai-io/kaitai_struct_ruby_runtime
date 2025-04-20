@@ -10,13 +10,20 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version:
+          - '3.4'
+          - '2.4'
+          - '1.9'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.4'
-          bundler-cache: true
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true # runs `bundle install` and caches installed gems automatically
       - name: Run tests
         run: bundle exec rspec --force-color
 
