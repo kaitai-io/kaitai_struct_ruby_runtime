@@ -7,7 +7,8 @@ require 'rspec' # normally not needed, but RubyMine doesn't autocomplete RSpec m
 require 'rantly'
 require 'rantly/rspec_extensions'
 
-IS_RUBY_1_9 = Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.0.0')
+# `.dup` is needed in Ruby 1.9, otherwise `RuntimeError: can't modify frozen String` occurs
+IS_RUBY_1_9 = Gem::Version.new(RUBY_VERSION.dup) < Gem::Version.new('2.0.0')
 
 RSpec.describe Kaitai::Struct::Stream do
   before(:all) do
