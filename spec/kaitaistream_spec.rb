@@ -189,7 +189,7 @@ RSpec.describe Kaitai::Struct::Stream do
       old_res = old_io.public_send(method_old, *op_args)
     rescue StandardError => old_err
       expected_msg = old_err.message
-      if IS_RUBY_1_9 && old_err.is_a?(TypeError) && expected_msg =~ /^can't convert (.*)/
+      if IS_RUBY_1_9 && method_new == :substream && old_err.is_a?(TypeError) && expected_msg =~ /^can't convert (.*)/
         expected_msg = "no implicit conversion of #{Regexp.last_match(1)}"
       end
       expect do
