@@ -3,7 +3,10 @@
 source 'https://rubygems.org'
 
 group :test do
-  gem 'rantly', '~> 3.0'
+  # * https://rubygems.org/gems/rantly/versions/3.0.0 requires Ruby >= 3.3.0
+  # * https://rubygems.org/gems/rantly/versions/2.0.0 requires Ruby >= 2.4.0
+  # * https://rubygems.org/gems/rantly/versions/1.2.0 requires Ruby >= 0
+  gem 'rantly', '>= 1.2.0', '< 4.0.0'
   gem 'rspec', '~> 3.13'
 end
 
