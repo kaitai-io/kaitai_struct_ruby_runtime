@@ -7,6 +7,8 @@ require 'rspec' # normally not needed, but RubyMine doesn't autocomplete RSpec m
 require 'rantly'
 require 'rantly/rspec_extensions'
 
+IS_RUBY_1_9 = Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.0.0')
+
 RSpec.describe Kaitai::Struct::Stream do
   before(:all) do
     @old_wd = Dir::getwd
@@ -185,9 +187,13 @@ RSpec.describe Kaitai::Struct::Stream do
     def call_io_method(method_new, op_args, old_io, new_io, method_old = method_new)
       old_res = old_io.public_send(method_old, *op_args)
     rescue StandardError => old_err
+      expected_msg = old_err.message
+      if IS_RUBY_1_9 && old_err.is_a?(TypeError) && expected_msg =~ /^can't convert (.*)/
+        expected_msg = "no implicit conversion of #{Regexp.last_match(1)}"
+      end
       expect do
         new_io.public_send(method_new, *op_args)
-      end.to raise_error(old_err.class, old_err.message)
+      end.to raise_error(old_err.class, expected_msg)
       [:fail, old_err]
     else
       new_res = new_io.public_send(method_new, *op_args)
