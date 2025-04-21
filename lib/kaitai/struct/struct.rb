@@ -85,8 +85,8 @@ class Stream
   # was expected to appear, but actual data read was different.
   class UnexpectedDataError < Exception
     def initialize(actual, expected)
-      super("Unexpected fixed contents: got #{Stream.format_hex(actual)}, " \
-            "was waiting for #{Stream.format_hex(expected)}")
+      super("Unexpected fixed contents: got #{Internal.format_hex(actual)}, " \
+            "was waiting for #{Internal.format_hex(expected)}")
       @actual = actual
       @expected = expected
     end
@@ -589,40 +589,6 @@ class Stream
   def self.resolve_enum(enum_map, value)
     enum_map[value] || value
   end
-
-  # ========================================================================
-
-  private
-
-  def self.format_hex(bytes)
-    bytes.unpack('H*')[0].gsub(/(..)/, '\1 ').chop
-  end
-
-  ###
-  # Guess if the given args are most likely byte arrays.
-  # <p>
-  # There's no way to know for sure, but {@code Encoding::ASCII_8BIT} is a special encoding that is
-  # usually used for a byte array(/string), not a character string. For those reasons, that encoding
-  # is NOT planned to be allowed for human readable texts by KS in general as well.
-  # </p>
-  # @param args [...] Something to check.
-  # @see <a href="https://ruby-doc.org/core-3.0.0/Encoding.html">Encoding</a>
-  # @see <a href="https://github.com/kaitai-io/kaitai_struct/issues/116">List of supported encodings</a>
-  #
-  def self.is_byte_array?(*args)
-    args.all? { |arg| arg.is_a?(String) and (arg.encoding == Encoding::ASCII_8BIT) }
-  end
-
-  def self.inspect_values(*args)
-    reprs = args.map { |arg|
-      if Stream.is_byte_array?(arg)
-        "[#{Stream.format_hex(arg)}]"
-      else
-        arg.inspect
-      end
-    }
-    reprs.length == 1 ? reprs[0] : reprs
-  end
 end
 
 ##
@@ -781,7 +747,7 @@ end
 # "expected", but it turned out that it's not.
 class ValidationNotEqualError < ValidationFailedError
   def initialize(expected, actual, io, src_path)
-    expected_repr, actual_repr = Stream.inspect_values(expected, actual)
+    expected_repr, actual_repr = Internal.inspect_values(expected, actual)
     super("not equal, expected #{expected_repr}, but got #{actual_repr}", io, src_path)
 
     @expected = expected
@@ -794,7 +760,7 @@ end
 # than or equal to "min", but it turned out that it's not.
 class ValidationLessThanError < ValidationFailedError
   def initialize(min, actual, io, src_path)
-    min_repr, actual_repr = Stream.inspect_values(min, actual)
+    min_repr, actual_repr = Internal.inspect_values(min, actual)
     super("not in range, min #{min_repr}, but got #{actual_repr}", io, src_path)
     @min = min
     @actual = actual
@@ -806,7 +772,7 @@ end
 # than or equal to "max", but it turned out that it's not.
 class ValidationGreaterThanError < ValidationFailedError
   def initialize(max, actual, io, src_path)
-    max_repr, actual_repr = Stream.inspect_values(max, actual)
+    max_repr, actual_repr = Internal.inspect_values(max, actual)
     super("not in range, max #{max_repr}, but got #{actual_repr}", io, src_path)
     @max = max
     @actual = actual
@@ -818,7 +784,7 @@ end
 # the given list, but it turned out that it's not.
 class ValidationNotAnyOfError < ValidationFailedError
   def initialize(actual, io, src_path)
-    actual_repr = Stream.inspect_values(actual)
+    actual_repr = Internal.inspect_values(actual)
     super("not any of the list, got #{actual_repr}", io, src_path)
     @actual = actual
   end
@@ -829,7 +795,7 @@ end
 # the enum, but it turned out that it's not.
 class ValidationNotInEnumError < ValidationFailedError
   def initialize(actual, io, src_path)
-    actual_repr = Stream.inspect_values(actual)
+    actual_repr = Internal.inspect_values(actual)
     super("not in the enum, got #{actual_repr}", io, src_path)
     @actual = actual
   end
@@ -840,7 +806,7 @@ end
 # the expression, but it turned out that it doesn't.
 class ValidationExprError < ValidationFailedError
   def initialize(actual, io, src_path)
-    actual_repr = Stream.inspect_values(actual)
+    actual_repr = Internal.inspect_values(actual)
     super("not matching the expression, got #{actual_repr}", io, src_path)
     @actual = actual
   end
@@ -867,6 +833,38 @@ module Internal
     raise TypeError.new("no implicit conversion of #{val_as_human} into Integer")
   else
     val_as_int
+  end
+
+  def self.format_hex(bytes)
+    bytes.unpack('H*')[0].gsub(/(..)/, '\1 ').chop
+  end
+
+  ###
+  # Guess if the given args are most likely byte arrays.
+  # <p>
+  # There's no way to know for sure, but {@code Encoding::ASCII_8BIT} is a special encoding that is
+  # usually used for a byte array(/string), not a character string. For those reasons, that encoding
+  # is NOT planned to be allowed for human readable texts by KS in general as well.
+  # </p>
+  # @param args [...] Something to check.
+  # @see <a href="https://ruby-doc.org/core-3.0.0/Encoding.html">Encoding</a>
+  # @see <a href="https://github.com/kaitai-io/kaitai_struct/issues/116">List of supported encodings</a>
+  #
+  def self.is_byte_array?(*args)
+    args.all? { |arg| arg.is_a?(String) and (arg.encoding == Encoding::ASCII_8BIT) }
+  end
+
+  private_class_method :is_byte_array?
+
+  def self.inspect_values(*args)
+    reprs = args.map { |arg|
+      if is_byte_array?(arg)
+        "[#{format_hex(arg)}]"
+      else
+        arg.inspect
+      end
+    }
+    reprs.length == 1 ? reprs[0] : reprs
   end
 
   # The `uplevel` keyword argument of Kernel#warn was added in Ruby 2.5,
