@@ -92,6 +92,9 @@ class Stream
     end
   end
 
+  # Module#deprecate_constant was added in Ruby 2.3, see
+  # https://rubyreferences.github.io/rubychanges/evolution.html#modules-and-classes
+  deprecate_constant :UnexpectedDataError if respond_to?(:deprecate_constant)
 
   ##
   # Constructs new Kaitai Stream object.
@@ -305,6 +308,10 @@ class Stream
   #   removed in the future. KSC 0.9 and later versions use
   #   {#read_bits_int_be} instead.
   def read_bits_int(n)
+    Internal.warn_deprecated(
+      'method Stream#read_bits_int is deprecated since 0.9, ' \
+      'use Stream#read_bits_int_be instead'
+    )
     read_bits_int_be(n)
   end
 
@@ -437,6 +444,10 @@ class Stream
   #   equal to expected
   # @raise [UnexpectedDataError]
   def ensure_fixed_contents(expected)
+    Internal.warn_deprecated(
+      'method Stream#ensure_fixed_contents is deprecated since 0.9, ' \
+      'explicitly raise ValidationNotEqualError from an `if` statement instead'
+    )
     len = expected.bytesize
     actual = @_io.read(len)
     raise UnexpectedDataError.new(actual, expected) if actual != expected
@@ -856,6 +867,28 @@ module Internal
     raise TypeError.new("no implicit conversion of #{val_as_human} into Integer")
   else
     val_as_int
+  end
+
+  # The `uplevel` keyword argument of Kernel#warn was added in Ruby 2.5,
+  # see https://rubyreferences.github.io/rubychanges/2.5.html#warn-uplevel-keyword-argument
+  #
+  # The `category` keyword argument of Kernel#warn was added in Ruby 3.0,
+  # see https://rubyreferences.github.io/rubychanges/3.0.html#warningwarn-category-keyword-argument
+  #
+  # NOTE: `.dup` is needed in Ruby 1.9, otherwise `RuntimeError: can't modify frozen String` occurs
+  WARN_SUPPORTS_UPLEVEL = Gem::Version.new(RUBY_VERSION.dup) >= Gem::Version.new('2.5.0')
+  WARN_SUPPORTS_CATEGORY = Gem::Version.new(RUBY_VERSION.dup) >= Gem::Version.new('3.0.0')
+  private_constant :WARN_SUPPORTS_UPLEVEL
+  private_constant :WARN_SUPPORTS_CATEGORY
+
+  def self.warn_deprecated(msg)
+    if WARN_SUPPORTS_CATEGORY
+      warn(msg, uplevel: 2, category: :deprecated)
+    elsif WARN_SUPPORTS_UPLEVEL
+      warn(msg, uplevel: 2)
+    else
+      warn(msg)
+    end
   end
 end
 
