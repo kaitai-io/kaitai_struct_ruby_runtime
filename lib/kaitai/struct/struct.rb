@@ -76,8 +76,10 @@ end
 # and API to do the actual parsing job.
 class Stream
   ##
-  # Unused since Kaitai Struct Compiler v0.9+ - compatibility with
-  # older versions.
+  # @deprecated Unused since Kaitai Struct compiler 0.9. It
+  #   is only available for backward compatibility and will be
+  #   removed in the future. KSC 0.9 and later versions use
+  #   {ValidationNotEqualError} instead.
   #
   # Exception class for an error that occurs when some fixed content
   # was expected to appear, but actual data read was different.
@@ -297,8 +299,11 @@ class Stream
     res
   end
 
-  # Unused since Kaitai Struct Compiler v0.9+ - compatibility with
-  # older versions.
+  ##
+  # @deprecated Unused since Kaitai Struct compiler 0.9. It
+  #   is only available for backward compatibility and will be
+  #   removed in the future. KSC 0.9 and later versions use
+  #   {#read_bits_int_be} instead.
   def read_bits_int(n)
     read_bits_int_be(n)
   end
@@ -419,8 +424,10 @@ class Stream
   end
 
   ##
-  # Unused since Kaitai Struct Compiler v0.9+ - compatibility with
-  # older versions.
+  # @deprecated Unused since Kaitai Struct compiler 0.9. It
+  #   is only available for backward compatibility and will be
+  #   removed in the future. KSC 0.9 and later versions raise
+  #   {ValidationNotEqualError} instead.
   #
   # Reads next len bytes from the stream and ensures that they match
   # expected fixed byte array. If they differ, throws a
