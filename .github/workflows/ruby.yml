@@ -24,6 +24,8 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true # runs `bundle install` and caches installed gems automatically
+        env:
+          BUNDLE_WITHOUT: 'development'
       - name: Run tests
         run: bundle exec rspec --force-color
 
