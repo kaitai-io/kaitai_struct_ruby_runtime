@@ -389,7 +389,7 @@ class Stream
 
   def read_bytes_term(term, include_term, consume_term, eos_error)
     term_byte = term.chr
-    r = ''
+    r = +''
     loop {
       c = @_io.getc
       if c.nil?
@@ -410,7 +410,7 @@ class Stream
 
   def read_bytes_term_multi(term, include_term, consume_term, eos_error)
     unit_size = term.bytesize
-    r = ''
+    r = +''
     loop {
       c = @_io.read(unit_size) || ''
       if c.bytesize < unit_size
@@ -707,7 +707,7 @@ class SubIO
     @closed
   end
 
-  BYTE_STRING_EMPTY = ''.force_encoding(Encoding::ASCII_8BIT).freeze
+  BYTE_STRING_EMPTY = (+'').force_encoding(Encoding::ASCII_8BIT).freeze
   private_constant :BYTE_STRING_EMPTY
 end
 
