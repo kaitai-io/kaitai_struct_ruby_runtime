@@ -319,7 +319,7 @@ class Stream
     res = 0
     bits_needed = n - @bits_left
 
-    if bits_needed > 0 then
+    if bits_needed > 0
       # 1 bit  => 1 byte
       # 8 bits => 1 byte
       # 9 bits => 2 bytes
