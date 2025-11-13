@@ -140,7 +140,10 @@ class Stream
   ##
   # Set stream pointer to designated position.
   # @param x [Fixnum] new position (offset in bytes from the beginning of the stream)
-  def seek(x); @_io.seek(x); end
+  def seek(x)
+    align_to_byte
+    @_io.seek(x)
+  end
 
   ##
   # Get current position of a stream pointer.
@@ -284,7 +287,7 @@ class Stream
       # 8 bits => 1 byte
       # 9 bits => 2 bytes
       bytes_needed = ((bits_needed - 1) / 8) + 1 # `ceil(bits_needed / 8)`
-      buf = read_bytes(bytes_needed)
+      buf = read_bytes_not_aligned(bytes_needed)
       buf.each_byte { |byte|
         res = res << 8 | byte
       }
@@ -324,7 +327,7 @@ class Stream
       # 8 bits => 1 byte
       # 9 bits => 2 bytes
       bytes_needed = ((bits_needed - 1) / 8) + 1 # `ceil(bits_needed / 8)`
-      buf = read_bytes(bytes_needed)
+      buf = read_bytes_not_aligned(bytes_needed)
       i = 0
       buf.each_byte { |byte|
         res |= byte << (i * 8)
@@ -357,6 +360,11 @@ class Stream
   # @raise [EOFError] if there were less bytes than requested
   #   available in the stream
   def read_bytes(n)
+    align_to_byte
+    read_bytes_not_aligned(n)
+  end
+
+  def read_bytes_not_aligned(n)
     if n.nil?
       # This `read(0)` call is only used to raise `IOError: not opened for reading`
       # if the stream is closed. This ensures identical behavior to the `substream`
@@ -380,14 +388,18 @@ class Stream
     r
   end
 
+  private :read_bytes_not_aligned
+
   ##
   # Reads all the remaining bytes in a stream as byte array.
   # @return [String] all remaining bytes in a stream as byte array
   def read_bytes_full
+    align_to_byte
     @_io.read
   end
 
   def read_bytes_term(term, include_term, consume_term, eos_error)
+    align_to_byte
     term_byte = term.chr
     r = String.new
     loop {
@@ -409,6 +421,7 @@ class Stream
   end
 
   def read_bytes_term_multi(term, include_term, consume_term, eos_error)
+    align_to_byte
     unit_size = term.bytesize
     r = String.new
     loop {
