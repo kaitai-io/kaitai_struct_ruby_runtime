@@ -583,6 +583,7 @@ class Stream
   # @return [Stream] substream covering n bytes from the current
   #   position
   def substream(n)
+    align_to_byte
     raise IOError.new('not opened for reading') if @_io.closed?
 
     n = Internal.num2long(n)
